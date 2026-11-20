@@ -2,35 +2,21 @@ import { useEffect, useRef } from 'react';
 
 interface MusicPlayerProps {
   isPlaying: boolean;
-  currentSongIndex: number;
-  onSongEnd: () => void;
 }
 
-export const MusicPlayer: React.FC<MusicPlayerProps> = ({
-  isPlaying,
-  currentSongIndex,
-  onSongEnd,
-}) => {
+export const MusicPlayer: React.FC<MusicPlayerProps> = ({ isPlaying }) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  const songs = ['/media/cancion-1.mp3', '/media/cancion-2.mp3'];
-  const currentSrc = songs[currentSongIndex % songs.length];
+  // Canción exclusiva de Narnia ("Lucy Meets Mr. Tumnus")
+  const narniaSongSrc = '/media/narnia-tumnus.mp3';
 
   useEffect(() => {
     if (!audioRef.current) {
-      audioRef.current = new Audio(currentSrc);
-      audioRef.current.loop = false;
-    } else {
-      audioRef.current.src = currentSrc;
+      audioRef.current = new Audio(narniaSongSrc);
+      audioRef.current.loop = true;
     }
 
     const audio = audioRef.current;
-
-    const handleEnded = () => {
-      onSongEnd();
-    };
-
-    audio.addEventListener('ended', handleEnded);
 
     if (isPlaying) {
       audio.play().catch((err) => {
@@ -39,11 +25,7 @@ export const MusicPlayer: React.FC<MusicPlayerProps> = ({
     } else {
       audio.pause();
     }
-
-    return () => {
-      audio.removeEventListener('ended', handleEnded);
-    };
-  }, [isPlaying, currentSrc]);
+  }, [isPlaying]);
 
   return null;
 };

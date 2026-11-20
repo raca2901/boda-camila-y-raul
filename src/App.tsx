@@ -29,7 +29,6 @@ export function App() {
 
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [isPlayingMusic, setIsPlayingMusic] = useState(false);
-  const [currentSongIndex, setCurrentSongIndex] = useState(0);
 
   // Load guests from Supabase if connected
   const refreshGuests = async () => {
@@ -95,11 +94,6 @@ export function App() {
     return true;
   };
 
-  const handleNextSong = () => {
-    setCurrentSongIndex((prev) => (prev + 1) % 2);
-    if (!isPlayingMusic) setIsPlayingMusic(true);
-  };
-
   return (
     <div className="min-h-screen bg-[#FAF8F5] text-stone-800 font-sans selection:bg-amber-100 selection:text-amber-900">
       
@@ -108,8 +102,6 @@ export function App() {
         onOpenAdmin={() => setIsAdminOpen(true)}
         isPlayingMusic={isPlayingMusic}
         onToggleMusic={() => setIsPlayingMusic(!isPlayingMusic)}
-        currentSongIndex={currentSongIndex}
-        onNextSong={handleNextSong}
       />
 
       {/* Hero with Countdown & Couple Portrait */}
@@ -159,11 +151,9 @@ export function App() {
         onRefreshFromDb={refreshGuests}
       />
 
-      {/* Real Audio Player with songs */}
+      {/* Narnia Song Audio Player */}
       <MusicPlayer
         isPlaying={isPlayingMusic}
-        currentSongIndex={currentSongIndex}
-        onSongEnd={handleNextSong}
       />
 
     </div>

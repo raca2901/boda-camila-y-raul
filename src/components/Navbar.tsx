@@ -1,20 +1,16 @@
 import { useState } from 'react';
-import { Lock, Music, VolumeX, Menu, X, SkipForward } from 'lucide-react';
+import { Lock, Music, VolumeX, Menu, X } from 'lucide-react';
 
 interface NavbarProps {
   onOpenAdmin: () => void;
   isPlayingMusic: boolean;
   onToggleMusic: () => void;
-  currentSongIndex: number;
-  onNextSong: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
   onOpenAdmin,
   isPlayingMusic,
   onToggleMusic,
-  currentSongIndex,
-  onNextSong,
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -62,34 +58,24 @@ export const Navbar: React.FC<NavbarProps> = ({
         {/* Action buttons (Music Player & Admin) */}
         <div className="flex items-center gap-2 sm:gap-3">
           
-          {/* Music Control Pill */}
-          <div className="flex items-center bg-amber-50/80 border border-amber-200/80 rounded-full px-2 py-1 text-xs text-amber-900">
-            <button
-              onClick={onToggleMusic}
-              title={isPlayingMusic ? 'Pausar música' : 'Reproducir música'}
-              className="p-1 rounded-full hover:bg-amber-100 transition-all"
-            >
-              {isPlayingMusic ? (
-                <span className="relative flex items-center justify-center">
-                  <Music className="w-4 h-4 text-amber-700 animate-pulse" />
-                </span>
-              ) : (
-                <VolumeX className="w-4 h-4 text-stone-500" />
-              )}
-            </button>
-
-            <span className="hidden sm:inline text-[10px] font-cinzel uppercase font-semibold px-1 text-amber-800">
-              {currentSongIndex === 0 ? 'Canción 1' : 'Canción 2'}
+          {/* Music Control Pill - Narnia */}
+          <button
+            onClick={onToggleMusic}
+            title={isPlayingMusic ? 'Pausar música de Narnia' : 'Reproducir música de Narnia'}
+            className="flex items-center gap-1.5 bg-amber-50/90 border border-amber-200/90 rounded-full px-3 py-1 text-xs text-amber-900 hover:bg-amber-100 transition-all shadow-sm"
+          >
+            {isPlayingMusic ? (
+              <span className="relative flex items-center justify-center">
+                <Music className="w-4 h-4 text-amber-700 animate-pulse" />
+                <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-amber-500 rounded-full animate-ping" />
+              </span>
+            ) : (
+              <VolumeX className="w-4 h-4 text-stone-500" />
+            )}
+            <span className="text-[11px] font-cinzel uppercase font-semibold text-amber-800">
+              {isPlayingMusic ? 'Narnia 🌲' : 'Música'}
             </span>
-
-            <button
-              onClick={onNextSong}
-              title="Alternar a la siguiente canción"
-              className="p-1 rounded-full hover:bg-amber-100 text-amber-800 transition-colors"
-            >
-              <SkipForward className="w-3.5 h-3.5" />
-            </button>
-          </div>
+          </button>
 
           {/* Admin Access Button */}
           <button
