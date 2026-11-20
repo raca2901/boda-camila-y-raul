@@ -1,4 +1,3 @@
-import React from 'react';
 import { Sparkles, Shirt } from 'lucide-react';
 
 interface DressCodeProps {
@@ -7,12 +6,20 @@ interface DressCodeProps {
 }
 
 export const DressCode: React.FC<DressCodeProps> = ({ title, description }) => {
-  const suggestedColors = [
-    { name: 'Verde Bosque', hex: '#233827', label: 'Elegancia botánica' },
-    { name: 'Champaña', hex: '#E7D7C1', label: 'Luz y calidez' },
-    { name: 'Rosa Empolvado', hex: '#D8A49B', label: 'Romanticismo floral' },
-    { name: 'Terracota Suave', hex: '#C27D60', label: 'Tierra y vida' },
-    { name: 'Azul Noche', hex: '#1E293B', label: 'Noche estrellada' },
+  const rosePalette = [
+    { hex: '#e57d90', name: 'Rosa Vintage' },
+    { hex: '#f1889b', name: 'Rosa Floral' },
+    { hex: '#f99aaa', name: 'Rosa Pastel' },
+    { hex: '#fdb4bf', name: 'Rosa Empolvado' },
+    { hex: '#ffcdd4', name: 'Rosa Blush' },
+  ];
+
+  const bluePalette = [
+    { hex: '#005187', name: 'Azul Zafiro' },
+    { hex: '#4d82bc', name: 'Azul Océano' },
+    { hex: '#84b6f4', name: 'Azul Celeste' },
+    { hex: '#c4dafa', name: 'Azul Brisa' },
+    { hex: '#fcffff', name: 'Blanco Nieve' },
   ];
 
   return (
@@ -28,39 +35,79 @@ export const DressCode: React.FC<DressCodeProps> = ({ title, description }) => {
           {title}
         </h2>
         
-        <p className="text-stone-600 text-sm sm:text-base max-w-xl mx-auto font-light leading-relaxed mb-8">
+        <p className="text-stone-600 text-sm sm:text-base max-w-xl mx-auto font-light leading-relaxed mb-10">
           {description}
         </p>
 
-        {/* Suggestion Swatches */}
-        <div className="bg-white/80 backdrop-blur-sm p-6 sm:p-8 rounded-3xl border border-amber-900/10 shadow-sm max-w-2xl mx-auto">
-          <p className="text-xs font-cinzel uppercase tracking-widest text-emerald-900 mb-6">
-            Paleta de Colores Inspirada en Narnia & Jardines
-          </p>
+        {/* Official Palettes Container */}
+        <div className="bg-white/90 backdrop-blur-sm p-6 sm:p-10 rounded-3xl border border-amber-900/10 shadow-md max-w-3xl mx-auto space-y-8">
+          
+          {/* Palette 1: Rosas Florales */}
+          <div>
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <span className="h-[1px] w-8 bg-pink-300" />
+              <p className="text-xs font-cinzel uppercase tracking-widest text-pink-900 font-semibold">
+                Gama Floral & Rosas
+              </p>
+              <span className="h-[1px] w-8 bg-pink-300" />
+            </div>
 
-          <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
-            {suggestedColors.map((color) => (
-              <div key={color.name} className="flex flex-col items-center group">
-                <div
-                  className="w-12 h-12 sm:w-14 sm:h-14 rounded-full shadow-md border-2 border-white ring-1 ring-stone-200 transition-transform duration-300 group-hover:scale-110"
-                  style={{ backgroundColor: color.hex }}
-                />
-                <span className="text-xs font-medium text-stone-700 mt-2">
-                  {color.name}
-                </span>
-                <span className="text-[10px] text-stone-400 font-light">
-                  {color.label}
-                </span>
-              </div>
-            ))}
+            <div className="grid grid-cols-5 gap-2 sm:gap-4">
+              {rosePalette.map((color) => (
+                <div key={color.hex} className="flex flex-col items-center group">
+                  <div
+                    className="w-11 h-11 sm:w-16 sm:h-16 rounded-2xl shadow-sm border border-stone-200/80 transition-transform duration-300 group-hover:scale-110"
+                    style={{ backgroundColor: color.hex }}
+                  />
+                  <span className="text-[10px] sm:text-xs font-mono text-stone-500 mt-2 font-medium">
+                    {color.hex}
+                  </span>
+                  <span className="text-[9px] sm:text-[11px] text-stone-600 font-light hidden sm:inline">
+                    {color.name}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
 
-          <div className="mt-8 pt-6 border-t border-stone-100 flex items-center justify-center gap-2 text-xs text-amber-900/80 bg-amber-50/60 py-3 px-4 rounded-xl">
+          <div className="w-full h-[1px] bg-stone-100" />
+
+          {/* Palette 2: Azules Océano */}
+          <div>
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <span className="h-[1px] w-8 bg-sky-300" />
+              <p className="text-xs font-cinzel uppercase tracking-widest text-sky-950 font-semibold">
+                Gama Costera & Azules
+              </p>
+              <span className="h-[1px] w-8 bg-sky-300" />
+            </div>
+
+            <div className="grid grid-cols-5 gap-2 sm:gap-4">
+              {bluePalette.map((color) => (
+                <div key={color.hex} className="flex flex-col items-center group">
+                  <div
+                    className="w-11 h-11 sm:w-16 sm:h-16 rounded-2xl shadow-sm border border-stone-200/80 transition-transform duration-300 group-hover:scale-110"
+                    style={{ backgroundColor: color.hex }}
+                  />
+                  <span className="text-[10px] sm:text-xs font-mono text-stone-500 mt-2 font-medium">
+                    {color.hex}
+                  </span>
+                  <span className="text-[9px] sm:text-[11px] text-stone-600 font-light hidden sm:inline">
+                    {color.name}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Bride reservation note */}
+          <div className="pt-4 border-t border-stone-100 flex items-center justify-center gap-2 text-xs text-amber-900/90 bg-amber-50/70 py-3 px-4 rounded-2xl">
             <Sparkles className="w-4 h-4 text-amber-600 shrink-0" />
             <span>
-              <strong>Nota con amor:</strong> El color blanco y marfil está reservado exclusivamente para la novia.
+              <strong>Nota con cariño:</strong> El color blanco y marfil está reservado exclusivamente para la novia.
             </span>
           </div>
+
         </div>
 
       </div>
