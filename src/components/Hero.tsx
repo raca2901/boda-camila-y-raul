@@ -1,16 +1,19 @@
 import { Countdown } from './Countdown';
-import { Sparkles, Calendar, MapPin, ChevronDown } from 'lucide-react';
+import { Sparkles, Calendar, MapPin, ChevronDown, Heart, Users } from 'lucide-react';
+import type { Guest } from '../types/wedding';
 
 interface HeroProps {
   brideName: string;
   groomName: string;
   weddingDate: string;
+  guest?: Guest;
 }
 
 export const Hero: React.FC<HeroProps> = ({
   brideName,
   groomName,
   weddingDate,
+  guest,
 }) => {
   return (
     <section
@@ -19,6 +22,21 @@ export const Hero: React.FC<HeroProps> = ({
     >
       {/* Delicate botanical & magical ambient background elements */}
       <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-gradient-to-tr from-amber-200/20 via-emerald-100/30 to-amber-100/10 rounded-full blur-3xl pointer-events-none" />
+
+      {/* VIP Guest Greeting Pill if guest is present */}
+      {guest && (
+        <div className="mb-4 inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/95 border border-amber-300 shadow-sm text-xs font-cinzel text-emerald-950 animate-in fade-in slide-in-from-top-2 duration-300">
+          <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500" />
+          <span>
+            Invitación Exclusiva para: <strong>{guest.name}</strong>
+          </span>
+          <span className="text-stone-400">|</span>
+          <span className="text-amber-800 font-semibold inline-flex items-center gap-1">
+            <Users className="w-3 h-3" />
+            {guest.passes} {guest.passes === 1 ? 'pase' : 'pases'}
+          </span>
+        </div>
+      )}
 
       {/* Narnia Lantern Svg Icon with glowing aura */}
       <div className="relative mb-3 group cursor-default">

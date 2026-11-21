@@ -17,15 +17,18 @@ import {
   Check,
   RefreshCw,
   FileSpreadsheet,
+  ExternalLink,
+  Sparkles,
 } from 'lucide-react';
 import type { Guest, RsvpStatus } from '../types/wedding';
+import { generateUUID } from '../types/wedding';
 import { isConfigured, saveSupabaseCredentials, clearSupabaseCredentials } from '../lib/supabase';
 
 interface AdminPanelProps {
   isOpen: boolean;
   onClose: () => void;
   guests: Guest[];
-  onAddGuest: (guest: Omit<Guest, 'id'>) => Promise<boolean>;
+  onAddGuest: (guest: Guest) => Promise<boolean>;
   onDeleteGuest: (id: string) => Promise<boolean>;
   onRefreshFromDb: () => void;
 }
@@ -50,14 +53,15 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   // New Guest Modal State
   const [showAddModal, setShowAddModal] = useState(false);
   const [newName, setNewName] = useState('');
-  const [newCode, setNewCode] = useState('');
   const [newPhone, setNewPhone] = useState('');
   const [newPasses, setNewPasses] = useState(2);
+  const [newUuid, setNewUuid] = useState(generateUUID());
   const [isSavingGuest, setIsSavingGuest] = useState(false);
+  const [justAddedGuest, setJustAddedGuest] = useState<Guest | null>(null);
 
   // Excel / CSV Import State
   const [showImportModal, setShowImportModal] = useState(false);
-  const [importedPreview, setImportedPreview] = useState<Array<Omit<Guest, 'id'>>>([]);
+  const [importedPreview, setImportedPreview] = useState<Guest[]>([]);
   const [isImporting, setIsImporting] = useState(false);
   const [importFeedback, setImportFeedback] = useState<string | null>(null);
 
@@ -67,19 +71,26 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [supabaseKey, setSupabaseKey] = useState(localStorage.getItem('wedding_supabase_anon_key') || '');
 
   // Copy feedback
-  const [copiedCode, setCopiedCode] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
   // Handle PIN unlock
   const handlePinSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (pinInput === '2027' || pinInput === 'camila2027' || pinInput === 'raul2027') {
+    const clean = pinInput.trim().toLowerCase();
+    if (clean === '2027' || clean === 'camila2027' || clean === 'raul2027') {
       setIsAuthenticated(true);
       setPinError(false);
     } else {
       setPinError(true);
     }
+  };
+
+  // Helper to build full invitation URL for a guest
+  const getGuestLink = (guest: Guest) => {
+    const origin = window.location.origin;
+    return `${origin}/?id=${guest.id}`;
   };
 
   // Metrics calculations
@@ -97,60 +108,64 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const filteredGuests = guests.filter((g) => {
     const matchesSearch =
       g.name.toLowerCase().includes(search.toLowerCase()) ||
-      g.code.toLowerCase().includes(search.toLowerCase());
+      g.id.toLowerCase().includes(search.toLowerCase()) ||
+      (g.phone && g.phone.toLowerCase().includes(search.toLowerCase())) ||
+      (g.code && g.code.toLowerCase().includes(search.toLowerCase()));
     const matchesStatus = statusFilter === 'all' || g.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
-  // Handle auto-generating code from name
-  const handleNameChange = (val: string) => {
-    setNewName(val);
-    const cleanCode = val
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .toUpperCase()
-      .replace(/[^A-Z0-9]/g, '')
-      .slice(0, 10);
-    setNewCode(cleanCode);
+  const handleOpenAddModal = () => {
+    setNewName('');
+    setNewPhone('');
+    setNewPasses(2);
+    setNewUuid(generateUUID());
+    setJustAddedGuest(null);
+    setShowAddModal(true);
   };
 
   const handleCreateGuest = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newName.trim() || !newCode.trim()) return;
+    if (!newName.trim()) return;
 
     setIsSavingGuest(true);
-    const success = await onAddGuest({
-      code: newCode.toUpperCase().trim(),
+    const code = newName
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toUpperCase()
+      .replace(/[^A-Z0-9]/g, '')
+      .slice(0, 10) || newUuid.slice(0, 8).toUpperCase();
+
+    const createdGuest: Guest = {
+      id: newUuid,
+      code,
       name: newName.trim(),
       phone: newPhone.trim(),
       passes: newPasses,
       confirmedPasses: 0,
       status: 'pending',
-    });
+      updatedAt: new Date().toISOString(),
+    };
+
+    const success = await onAddGuest(createdGuest);
     setIsSavingGuest(false);
 
     if (success) {
-      setNewName('');
-      setNewCode('');
-      setNewPhone('');
-      setNewPasses(2);
-      setShowAddModal(false);
+      setJustAddedGuest(createdGuest);
     }
   };
 
   const handleCopyLink = (guest: Guest) => {
-    const origin = window.location.origin;
-    const link = `${origin}?invitado=${encodeURIComponent(guest.code)}`;
+    const link = getGuestLink(guest);
     navigator.clipboard.writeText(link);
-    setCopiedCode(guest.code);
-    setTimeout(() => setCopiedCode(null), 2000);
+    setCopiedId(guest.id);
+    setTimeout(() => setCopiedId(null), 2500);
   };
 
   const handleSendWhatsApp = (guest: Guest) => {
-    const origin = window.location.origin;
-    const link = `${origin}?invitado=${encodeURIComponent(guest.code)}`;
+    const link = getGuestLink(guest);
     const text = encodeURIComponent(
-      `¡Hola ${guest.name}! ✨\n\nCon mucha emoción y cariño, Camila y Raúl te invitamos a celebrar nuestra boda el 31 de Enero de 2027 en Copacabana (Medellín).\n\nPuedes ver todos los detalles de la invitación y confirmar tu asistencia en el siguiente enlace:\n${link}\n\n¡Esperamos contar contigo!`
+      `¡Hola ${guest.name}! ✨💍\n\nCon enorme alegría y emoción, Camila y Raúl te invitamos formalmente a celebrar nuestra boda el 31 de Enero de 2027 en Copacabana (Medellín).\n\nHemos preparado una invitación privada y exclusiva para ti donde puedes ver todos los detalles del evento (ubicación, código de vestimenta) y confirmar tu asistencia:\n\n👉 ${link}\n\n¡Esperamos con el corazón contar contigo en este gran día!`
     );
     const cleanPhone = (guest.phone || '').replace(/\D/g, '');
     const url = cleanPhone ? `https://wa.me/${cleanPhone}?text=${text}` : `https://wa.me/?text=${text}`;
@@ -158,10 +173,21 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   };
 
   const handleExportCsv = () => {
-    const headers = ['Nombre', 'Codigo', 'Telefono', 'Pases Asignados', 'Estado', 'Pases Confirmados', 'Menu / Alergias', 'Dedicatoria'];
+    const headers = [
+      'Nombre',
+      'UUID_Identificador',
+      'Enlace_Invitacion',
+      'Telefono',
+      'Pases_Asignados',
+      'Estado',
+      'Pases_Confirmados',
+      'Menu_Alergias',
+      'Dedicatoria',
+    ];
     const rows = guests.map((g) => [
       `"${g.name}"`,
-      `"${g.code}"`,
+      `"${g.id}"`,
+      `"${getGuestLink(g)}"`,
       `"${g.phone || ''}"`,
       g.passes,
       `"${g.status}"`,
@@ -183,7 +209,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
   // Download template for Excel / CSV import
   const handleDownloadTemplate = () => {
-    const templateContent = '\uFEFFNombre;Telefono;Pases;Codigo\nFamilia Gómez Restrepo;+573001234567;4;FLIAGOMEZ\nCarlos Mario & Pareja;+573109876543;2;CARLOSM\nValentina Ramírez;+573205551234;1;VALENTINAR';
+    const templateContent = '\uFEFFNombre;Telefono;Pases\nFamilia Gómez Restrepo;+573001234567;4\nCarlos Mario & Pareja;+573109876543;2\nValentina Ramírez;+573205551234;1';
     const blob = new Blob([templateContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -194,7 +220,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     document.body.removeChild(link);
   };
 
-  // Parse uploaded CSV / Excel file
+  // Parse uploaded CSV / Excel file and generate UUIDs for each
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -209,11 +235,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           return;
         }
 
-        // Detect delimiter (semicolon or comma)
         const firstLine = lines[0];
         const delimiter = firstLine.includes(';') ? ';' : ',';
 
-        const parsed: Array<Omit<Guest, 'id'>> = [];
+        const parsed: Guest[] = [];
 
         // Skip header line
         for (let i = 1; i < lines.length; i++) {
@@ -222,26 +247,29 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             const name = cols[0];
             const phone = cols[1] || '';
             const passes = parseInt(cols[2]) || 2;
-            const customCode = cols[3] || name
+            const uuid = generateUUID();
+            const code = name
               .normalize('NFD')
               .replace(/[\u0300-\u036f]/g, '')
               .toUpperCase()
               .replace(/[^A-Z0-9]/g, '')
-              .slice(0, 10);
+              .slice(0, 10) || uuid.slice(0, 8);
 
             parsed.push({
+              id: uuid,
+              code,
               name,
               phone,
               passes,
               confirmedPasses: 0,
-              code: customCode,
               status: 'pending',
+              updatedAt: new Date().toISOString(),
             });
           }
         }
 
         setImportedPreview(parsed);
-        setImportFeedback(`Se detectaron ${parsed.length} invitados listos para importar.`);
+        setImportFeedback(`Se detectaron ${parsed.length} invitados con enlaces UUID generados listos para importar.`);
       } catch (err) {
         console.error(err);
         setImportFeedback('Error al procesar el archivo. Asegúrate de que sea formato CSV.');
@@ -263,21 +291,21 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/60 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="bg-[#FAF8F5] rounded-3xl w-full max-w-5xl max-h-[92vh] flex flex-col shadow-2xl border border-amber-900/20 overflow-hidden text-stone-800">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-200">
+      <div className="bg-[#FAF8F5] rounded-3xl w-full max-w-6xl max-h-[94vh] flex flex-col shadow-2xl border border-amber-900/20 overflow-hidden text-stone-800">
         
-        {/* Top Bar */}
-        <div className="px-6 py-4 bg-emerald-950 text-amber-50 flex items-center justify-between">
+        {/* Top Header Bar */}
+        <div className="px-6 py-4 bg-emerald-950 text-amber-50 flex items-center justify-between shadow-md">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-amber-500/20 text-amber-300 flex items-center justify-center">
+            <div className="w-9 h-9 rounded-full bg-amber-500/20 text-amber-300 flex items-center justify-center border border-amber-400/30">
               <Key className="w-4 h-4" />
             </div>
             <div>
               <h2 className="font-serif-title text-xl sm:text-2xl font-light text-amber-50">
-                Panel de Control de Invitados
+                Panel de Invitaciones Privadas
               </h2>
-              <span className="text-[10px] font-cinzel uppercase tracking-widest text-amber-200/60 block">
-                Exclusivo para Camila & Raúl
+              <span className="text-[10px] font-cinzel uppercase tracking-widest text-amber-200/70 block">
+                Exclusivo para Camila & Raúl · Gestión de Enlaces y Confirmaciones
               </span>
             </div>
           </div>
@@ -296,10 +324,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               <Key className="w-8 h-8" />
             </div>
             <h3 className="font-serif-title text-3xl font-medium text-emerald-950 mb-2">
-              Acceso Privado para los Novios
+              Acceso Exclusivo para los Novios
             </h3>
             <p className="text-stone-500 text-sm max-w-sm mb-6 font-light">
-              Ingresa el PIN de seguridad para acceder a la gestión de invitados y configuración de la boda.
+              Ingresa tu PIN de seguridad para gestionar la lista de invitados, enviar enlaces privados y revisar quién ha confirmado.
             </p>
 
             <form onSubmit={handlePinSubmit} className="w-full max-w-xs space-y-3">
@@ -309,7 +337,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 value={pinInput}
                 onChange={(e) => setPinInput(e.target.value)}
                 placeholder="PIN (por defecto: 2027)"
-                className="w-full px-4 py-3 bg-white border border-stone-300 rounded-2xl text-center text-lg font-mono tracking-widest focus:ring-2 focus:ring-emerald-800 focus:outline-none"
+                className="w-full px-4 py-3 bg-white border border-stone-300 rounded-2xl text-center text-lg font-mono tracking-widest focus:ring-2 focus:ring-emerald-800 focus:outline-none shadow-xs"
               />
               {pinError && (
                 <p className="text-xs text-rose-600 font-medium">
@@ -344,13 +372,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${
                       isConfigured ? 'bg-emerald-200 text-emerald-800' : 'bg-amber-200 text-amber-800'
                     }`}>
-                      {isConfigured ? 'Conectado en Tiempo Real' : 'Modo Demostración Local'}
+                      {isConfigured ? 'Conectado en Tiempo Real' : 'Almacenamiento Local (Listo)'}
                     </span>
                   </div>
                   <p className="text-xs text-stone-600 font-light mt-0.5">
                     {isConfigured
-                      ? 'Las confirmaciones de los invitados se sincronizan directamente con tu proyecto en Supabase.'
-                      : 'Puedes vincular tus credenciales de Supabase en cualquier momento para sincronizar en la nube.'}
+                      ? 'Cada confirmación y nuevo invitado se sincroniza al instante en Supabase.'
+                      : 'Los enlaces y confirmaciones se guardan localmente. Puedes conectar Supabase en cualquier momento.'}
                   </p>
                 </div>
               </div>
@@ -369,7 +397,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   onClick={() => setShowDbModal(true)}
                   className="px-4 py-2 bg-white text-stone-800 rounded-xl border border-stone-200 text-xs font-cinzel uppercase tracking-wider hover:bg-stone-50 transition-colors shadow-sm"
                 >
-                  {isConfigured ? 'Gestionar Conexión' : 'Conectar Supabase'}
+                  {isConfigured ? 'Configuración DB' : 'Conectar Supabase'}
                 </button>
               </div>
             </div>
@@ -390,7 +418,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 </span>
               </div>
 
-              <div className="bg-white p-4 rounded-2xl border border-emerald-100 shadow-sm bg-gradient-to-br from-white to-emerald-50/40">
+              <div className="bg-white p-4 rounded-2xl border border-emerald-200 shadow-sm bg-gradient-to-br from-white to-emerald-50/50">
                 <div className="flex items-center justify-between text-emerald-700 mb-1">
                   <span className="text-[10px] font-cinzel uppercase tracking-wider">Confirmados</span>
                   <CheckCircle className="w-4 h-4 text-emerald-700" />
@@ -414,7 +442,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 <span className="text-[10px] text-stone-400">Pases liberados</span>
               </div>
 
-              <div className="bg-white p-4 rounded-2xl border border-amber-100 shadow-sm bg-gradient-to-br from-white to-amber-50/40">
+              <div className="bg-white p-4 rounded-2xl border border-amber-200 shadow-sm bg-gradient-to-br from-white to-amber-50/50">
                 <div className="flex items-center justify-between text-amber-700 mb-1">
                   <span className="text-[10px] font-cinzel uppercase tracking-wider">Pendientes</span>
                   <Clock className="w-4 h-4 text-amber-700" />
@@ -427,8 +455,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
             </div>
 
-            {/* Actions Bar (Search, Filter, Import, Export, Add) */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white p-3.5 rounded-2xl border border-stone-200">
+            {/* Actions Bar (Search, Status Filter, Import, Export, Add) */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-stone-200 shadow-sm">
               
               <div className="flex items-center gap-2 flex-1">
                 <div className="relative flex-1">
@@ -436,22 +464,46 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     type="text"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Buscar por nombre o código..."
+                    placeholder="Buscar por nombre, teléfono o UUID..."
                     className="w-full pl-9 pr-3 py-2 bg-stone-50 border border-stone-200 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-emerald-800"
                   />
                   <Search className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
                 </div>
 
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value as any)}
-                  className="px-3 py-2 bg-stone-50 border border-stone-200 rounded-xl text-xs focus:outline-none text-stone-700 font-cinzel"
-                >
-                  <option value="all">Todos los Estados</option>
-                  <option value="confirmed">Confirmados</option>
-                  <option value="pending">Pendientes</option>
-                  <option value="declined">No Asistirán</option>
-                </select>
+                <div className="flex bg-stone-100 p-1 rounded-xl">
+                  <button
+                    onClick={() => setStatusFilter('all')}
+                    className={`px-2.5 py-1 text-[11px] font-cinzel uppercase rounded-lg transition-colors ${
+                      statusFilter === 'all' ? 'bg-white text-emerald-950 font-bold shadow-xs' : 'text-stone-500'
+                    }`}
+                  >
+                    Todos ({guests.length})
+                  </button>
+                  <button
+                    onClick={() => setStatusFilter('confirmed')}
+                    className={`px-2.5 py-1 text-[11px] font-cinzel uppercase rounded-lg transition-colors ${
+                      statusFilter === 'confirmed' ? 'bg-emerald-100 text-emerald-900 font-bold shadow-xs' : 'text-stone-500'
+                    }`}
+                  >
+                    Confirmados ({guests.filter((g) => g.status === 'confirmed').length})
+                  </button>
+                  <button
+                    onClick={() => setStatusFilter('pending')}
+                    className={`px-2.5 py-1 text-[11px] font-cinzel uppercase rounded-lg transition-colors ${
+                      statusFilter === 'pending' ? 'bg-amber-100 text-amber-900 font-bold shadow-xs' : 'text-stone-500'
+                    }`}
+                  >
+                    Pendientes ({guests.filter((g) => g.status === 'pending').length})
+                  </button>
+                  <button
+                    onClick={() => setStatusFilter('declined')}
+                    className={`px-2.5 py-1 text-[11px] font-cinzel uppercase rounded-lg transition-colors ${
+                      statusFilter === 'declined' ? 'bg-rose-100 text-rose-900 font-bold shadow-xs' : 'text-stone-500'
+                    }`}
+                  >
+                    No Asisten ({guests.filter((g) => g.status === 'declined').length})
+                  </button>
+                </div>
               </div>
 
               <div className="flex items-center gap-2">
@@ -466,7 +518,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
                 <button
                   onClick={handleExportCsv}
-                  title="Descargar lista en formato Excel/CSV para el banquete"
+                  title="Descargar lista en formato Excel/CSV con todos los enlaces"
                   className="flex items-center gap-1.5 px-3 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl text-xs font-cinzel uppercase tracking-wider transition-colors"
                 >
                   <Download className="w-3.5 h-3.5 text-stone-600" />
@@ -474,11 +526,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 </button>
 
                 <button
-                  onClick={() => setShowAddModal(true)}
+                  onClick={handleOpenAddModal}
                   className="flex items-center gap-1.5 px-4 py-2 bg-emerald-900 hover:bg-emerald-800 text-amber-50 rounded-xl text-xs font-cinzel uppercase tracking-wider transition-colors shadow-sm"
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  <span>Nuevo</span>
+                  <span>Crear Invitación</span>
                 </button>
               </div>
 
@@ -490,94 +542,147 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 <table className="w-full text-left text-xs">
                   <thead className="bg-stone-50 border-b border-stone-200 text-stone-500 font-cinzel uppercase tracking-wider">
                     <tr>
-                      <th className="py-3 px-4">Invitado / Familia</th>
-                      <th className="py-3 px-3">Código</th>
-                      <th className="py-3 px-3 text-center">Pases</th>
-                      <th className="py-3 px-3 text-center">Estado</th>
-                      <th className="py-3 px-4">Notas / Alergias</th>
-                      <th className="py-3 px-4 text-right">Acciones</th>
+                      <th className="py-3.5 px-4">Invitado / Familia</th>
+                      <th className="py-3.5 px-3">Enlace Privado (UUID)</th>
+                      <th className="py-3.5 px-3 text-center">Pases</th>
+                      <th className="py-3.5 px-3 text-center">Estado</th>
+                      <th className="py-3.5 px-4">Menú / Dedicatoria</th>
+                      <th className="py-3.5 px-4 text-right">Enviar / Copiar</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-stone-100">
                     {filteredGuests.length > 0 ? (
-                      filteredGuests.map((guest) => (
-                        <tr key={guest.id} className="hover:bg-stone-50/70 transition-colors">
-                          <td className="py-3.5 px-4 font-medium text-stone-800">
-                            <div>{guest.name}</div>
-                            {guest.phone && (
-                              <div className="text-[10px] text-stone-400 font-light">{guest.phone}</div>
-                            )}
-                          </td>
-                          <td className="py-3.5 px-3 font-mono text-emerald-900 font-semibold">
-                            {guest.code}
-                          </td>
-                          <td className="py-3.5 px-3 text-center">
-                            <span className="font-semibold text-stone-800">
-                              {guest.status === 'confirmed' ? guest.confirmedPasses : guest.passes}
-                            </span>
-                            <span className="text-[10px] text-stone-400">/{guest.passes}</span>
-                          </td>
-                          <td className="py-3.5 px-3 text-center">
-                            {guest.status === 'confirmed' && (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-800">
-                                Confirmado
-                              </span>
-                            )}
-                            {guest.status === 'declined' && (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-rose-100 text-rose-800">
-                                No Asistirá
-                              </span>
-                            )}
-                            {guest.status === 'pending' && (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-800">
-                                Pendiente
-                              </span>
-                            )}
-                          </td>
-                          <td className="py-3.5 px-4 max-w-xs truncate text-stone-600">
-                            {guest.dietaryPreference && guest.dietaryPreference !== 'standard' && (
-                              <span className="text-amber-800 font-medium block">
-                                [Menú: {guest.dietaryPreference}]
-                              </span>
-                            )}
-                            {guest.notes ? (
-                              <span className="italic text-stone-500">"{guest.notes}"</span>
-                            ) : (
-                              <span className="text-stone-300">—</span>
-                            )}
-                          </td>
-                          <td className="py-3.5 px-4 text-right space-x-1">
-                            <button
-                              onClick={() => handleSendWhatsApp(guest)}
-                              title="Enviar invitación por WhatsApp"
-                              className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors inline-block"
-                            >
-                              <MessageCircle className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => handleCopyLink(guest)}
-                              title="Copiar enlace único de la invitación"
-                              className="p-1.5 text-stone-500 hover:bg-stone-100 rounded-lg transition-colors inline-block"
-                            >
-                              {copiedCode === guest.code ? (
-                                <Check className="w-4 h-4 text-emerald-600" />
+                      filteredGuests.map((guest) => {
+                        const link = getGuestLink(guest);
+                        return (
+                          <tr key={guest.id} className="hover:bg-stone-50/70 transition-colors">
+                            {/* Guest Name & Phone */}
+                            <td className="py-3.5 px-4 font-medium text-stone-800">
+                              <div className="text-sm font-serif-title">{guest.name}</div>
+                              {guest.phone ? (
+                                <div className="text-[10px] text-stone-400 font-mono mt-0.5">{guest.phone}</div>
                               ) : (
-                                <Copy className="w-4 h-4" />
+                                <div className="text-[10px] text-stone-300 italic">Sin teléfono</div>
                               )}
-                            </button>
-                            <button
-                              onClick={() => onDeleteGuest(guest.id)}
-                              title="Eliminar invitado"
-                              className="p-1.5 text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors inline-block"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </td>
-                        </tr>
-                      ))
+                            </td>
+
+                            {/* UUID & Link */}
+                            <td className="py-3.5 px-3">
+                              <div className="flex items-center gap-1.5">
+                                <span className="font-mono text-[11px] text-emerald-950 bg-stone-100 px-2 py-1 rounded-lg border border-stone-200">
+                                  {guest.id.slice(0, 8)}...{guest.id.slice(-4)}
+                                </span>
+                                <button
+                                  onClick={() => handleCopyLink(guest)}
+                                  title="Copiar enlace único de invitación"
+                                  className="p-1 hover:bg-stone-200 rounded text-stone-500"
+                                >
+                                  {copiedId === guest.id ? (
+                                    <Check className="w-3.5 h-3.5 text-emerald-600" />
+                                  ) : (
+                                    <Copy className="w-3.5 h-3.5" />
+                                  )}
+                                </button>
+                              </div>
+                            </td>
+
+                            {/* Passes */}
+                            <td className="py-3.5 px-3 text-center">
+                              <span className="font-semibold text-stone-800 text-sm">
+                                {guest.status === 'confirmed' ? guest.confirmedPasses : guest.passes}
+                              </span>
+                              <span className="text-[10px] text-stone-400">/{guest.passes}</span>
+                            </td>
+
+                            {/* Status */}
+                            <td className="py-3.5 px-3 text-center">
+                              {guest.status === 'confirmed' && (
+                                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-900 border border-emerald-300">
+                                  ✓ Confirmado ({guest.confirmedPasses})
+                                </span>
+                              )}
+                              {guest.status === 'declined' && (
+                                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-semibold bg-rose-100 text-rose-900 border border-rose-300">
+                                  ✕ No Asistirá
+                                </span>
+                              )}
+                              {guest.status === 'pending' && (
+                                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-900 border border-amber-300">
+                                  ⏳ Pendiente
+                                </span>
+                              )}
+                            </td>
+
+                            {/* Dietary & Notes */}
+                            <td className="py-3.5 px-4 max-w-xs text-stone-600">
+                              {guest.dietaryPreference && guest.dietaryPreference !== 'standard' && (
+                                <span className="text-amber-800 font-semibold block text-[11px]">
+                                  🍽️ Menú: {guest.dietaryPreference} {guest.dietaryNotes && `(${guest.dietaryNotes})`}
+                                </span>
+                              )}
+                              {guest.notes ? (
+                                <span className="italic text-stone-500 text-xs line-clamp-2">
+                                  "{guest.notes}"
+                                </span>
+                              ) : (
+                                <span className="text-stone-300 text-xs">—</span>
+                              )}
+                            </td>
+
+                            {/* Actions */}
+                            <td className="py-3.5 px-4 text-right space-x-1 shrink-0">
+                              {/* Send WhatsApp */}
+                              <button
+                                onClick={() => handleSendWhatsApp(guest)}
+                                title="Enviar invitación personalizada por WhatsApp"
+                                className="p-2 text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl transition-all shadow-xs inline-block"
+                              >
+                                <MessageCircle className="w-4 h-4" />
+                              </button>
+
+                              {/* Copy Link */}
+                              <button
+                                onClick={() => handleCopyLink(guest)}
+                                title="Copiar enlace con UUID"
+                                className="p-2 text-stone-600 bg-stone-100 hover:bg-stone-200 rounded-xl transition-colors inline-block"
+                              >
+                                {copiedId === guest.id ? (
+                                  <Check className="w-4 h-4 text-emerald-600" />
+                                ) : (
+                                  <Copy className="w-4 h-4" />
+                                )}
+                              </button>
+
+                              {/* Open Guest View */}
+                              <a
+                                href={link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                title="Ver cómo ve el invitado su invitación"
+                                className="p-2 text-stone-500 bg-stone-100 hover:bg-stone-200 rounded-xl transition-colors inline-block"
+                              >
+                                <ExternalLink className="w-4 h-4" />
+                              </a>
+
+                              {/* Delete */}
+                              <button
+                                onClick={() => {
+                                  if (confirm(`¿Eliminar la invitación de ${guest.name}?`)) {
+                                    onDeleteGuest(guest.id);
+                                  }
+                                }}
+                                title="Eliminar invitado"
+                                className="p-2 text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors inline-block"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })
                     ) : (
                       <tr>
-                        <td colSpan={6} className="py-8 text-center text-stone-400 text-sm">
+                        <td colSpan={6} className="py-10 text-center text-stone-400 text-sm">
                           No se encontraron invitados con los filtros seleccionados.
                         </td>
                       </tr>
@@ -587,6 +692,175 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               </div>
             </div>
 
+          </div>
+        )}
+
+        {/* Modal: Create Single Guest / Invite */}
+        {showAddModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-150">
+            <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-stone-200">
+              
+              <div className="flex items-center justify-between mb-4 pb-2 border-b border-stone-100">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-amber-600" />
+                  <h3 className="font-serif-title text-2xl font-medium text-emerald-950">
+                    Crear Nueva Invitación Privada
+                  </h3>
+                </div>
+                <button onClick={() => setShowAddModal(false)} className="text-stone-400 hover:text-stone-700">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {!justAddedGuest ? (
+                <form onSubmit={handleCreateGuest} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-cinzel uppercase tracking-wider text-stone-700 mb-1">
+                      Nombre o Familia del Invitado *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={newName}
+                      onChange={(e) => setNewName(e.target.value)}
+                      placeholder="Ej. Familia Rodríguez Gómez o Mariana Restrepo"
+                      className="w-full px-4 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-xs focus:ring-1 focus:ring-emerald-800 focus:outline-none"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-cinzel uppercase tracking-wider text-stone-700 mb-1">
+                        Pases Reservados *
+                      </label>
+                      <input
+                        type="number"
+                        min={1}
+                        max={10}
+                        required
+                        value={newPasses}
+                        onChange={(e) => setNewPasses(parseInt(e.target.value) || 1)}
+                        className="w-full px-4 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-xs focus:ring-1 focus:ring-emerald-800 focus:outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-cinzel uppercase tracking-wider text-stone-700 mb-1">
+                        WhatsApp (opcional)
+                      </label>
+                      <input
+                        type="text"
+                        value={newPhone}
+                        onChange={(e) => setNewPhone(e.target.value)}
+                        placeholder="+57 300 000 0000"
+                        className="w-full px-4 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-xs focus:ring-1 focus:ring-emerald-800 focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-[11px] font-cinzel uppercase tracking-wider text-stone-500">
+                        UUID Único Asignado Automáticamente:
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setNewUuid(generateUUID())}
+                        className="text-[10px] text-emerald-800 hover:underline font-mono"
+                      >
+                        Generar otro
+                      </button>
+                    </div>
+                    <div className="w-full px-3 py-2 bg-stone-100 rounded-xl text-xs font-mono text-stone-600 select-all border border-stone-200">
+                      {newUuid}
+                    </div>
+                  </div>
+
+                  <div className="pt-3 flex justify-end gap-2 border-t border-stone-100">
+                    <button
+                      type="button"
+                      onClick={() => setShowAddModal(false)}
+                      className="px-4 py-2 rounded-xl text-xs font-cinzel uppercase text-stone-600 hover:bg-stone-100"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isSavingGuest}
+                      className="px-5 py-2.5 bg-emerald-950 hover:bg-emerald-900 text-amber-50 rounded-xl text-xs font-cinzel uppercase tracking-wider transition-all disabled:opacity-50 shadow-md"
+                    >
+                      {isSavingGuest ? 'Creando enlace...' : 'Guardar y Generar Enlace'}
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                /* Success Card with 1-click send / copy */
+                <div className="space-y-4 py-2">
+                  <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-center space-y-2">
+                    <CheckCircle className="w-10 h-10 text-emerald-700 mx-auto" />
+                    <h4 className="font-serif-title text-xl text-emerald-950 font-medium">
+                      ¡Invitación Creada con Éxito!
+                    </h4>
+                    <p className="text-xs text-stone-600">
+                      Se ha generado el enlace privado único para <strong>{justAddedGuest.name}</strong> ({justAddedGuest.passes} pases).
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-cinzel uppercase tracking-wider text-stone-600 mb-1">
+                      Enlace Personalizado:
+                    </label>
+                    <div className="p-3 bg-stone-50 rounded-xl border border-stone-200 text-xs font-mono text-stone-800 break-all select-all">
+                      {getGuestLink(justAddedGuest)}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 pt-2">
+                    <button
+                      onClick={() => handleSendWhatsApp(justAddedGuest)}
+                      className="py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-cinzel uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-sm transition-all"
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                      <span>Enviar WhatsApp</span>
+                    </button>
+
+                    <button
+                      onClick={() => handleCopyLink(justAddedGuest)}
+                      className="py-3 bg-stone-100 hover:bg-stone-200 text-stone-800 rounded-xl text-xs font-cinzel uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all"
+                    >
+                      {copiedId === justAddedGuest.id ? (
+                        <>
+                          <Check className="w-4 h-4 text-emerald-600" />
+                          <span>¡Enlace Copiado!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-4 h-4 text-stone-600" />
+                          <span>Copiar Enlace</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  <div className="pt-2 flex justify-between">
+                    <button
+                      onClick={() => handleOpenAddModal()}
+                      className="text-xs text-emerald-900 hover:underline font-cinzel font-semibold"
+                    >
+                      + Crear Otro Invitado
+                    </button>
+
+                    <button
+                      onClick={() => setShowAddModal(false)}
+                      className="px-4 py-2 bg-stone-200 hover:bg-stone-300 text-stone-800 rounded-xl text-xs font-cinzel uppercase tracking-wider"
+                    >
+                      Listo / Cerrar
+                    </button>
+                  </div>
+                </div>
+              )}
+
+            </div>
           </div>
         )}
 
@@ -608,13 +882,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
               <div className="space-y-4 text-xs text-stone-600 mb-6">
                 <p>
-                  Sube tu archivo de Excel (guardado como formato <strong>.CSV</strong>) para registrar tus invitados masivamente.
+                  Sube tu archivo de Excel guardado como <strong>.CSV</strong>. El sistema le asignará automáticamente un UUID único y un enlace privado a cada invitado.
                 </p>
 
                 <div className="bg-stone-50 p-4 rounded-2xl border border-stone-200 space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="font-medium text-stone-800">
-                      ¿Aún no tienes la lista en formato?
+                      ¿Necesitas el formato de ejemplo?
                     </span>
                     <button
                       type="button"
@@ -625,7 +899,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     </button>
                   </div>
                   <p className="text-[11px] text-stone-500">
-                    La plantilla contiene las columnas: <code>Nombre</code>, <code>Telefono</code>, <code>Pases</code> y <code>Codigo</code>.
+                    Columnas: <code>Nombre</code>, <code>Telefono</code> y <code>Pases</code>.
                   </p>
                 </div>
 
@@ -637,7 +911,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     type="file"
                     accept=".csv,text/csv,text/plain"
                     onChange={handleFileSelect}
-                    className="w-full px-3 py-2.5 bg-white border border-stone-300 rounded-xl text-xs file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-cinzel file:bg-emerald-900 file:text-amber-50 hover:file:bg-emerald-800 cursor-pointer"
+                    className="w-full px-3 py-2.5 bg-white border border-stone-300 rounded-xl text-xs file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-cinzel file:bg-emerald-950 file:text-amber-50 hover:file:bg-emerald-900 cursor-pointer"
                   />
                 </div>
 
@@ -650,13 +924,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 {importedPreview.length > 0 && (
                   <div className="border border-stone-200 rounded-xl p-3 max-h-48 overflow-y-auto bg-stone-50">
                     <span className="text-[10px] font-cinzel uppercase text-stone-500 block mb-2 font-semibold">
-                      Vista previa de los primeros invitados:
+                      Vista previa ({importedPreview.length} encontrados):
                     </span>
                     <ul className="divide-y divide-stone-200 text-xs">
                       {importedPreview.slice(0, 5).map((p, idx) => (
                         <li key={idx} className="py-1.5 flex justify-between">
                           <span className="font-medium text-stone-800">{p.name}</span>
-                          <span className="text-stone-500">{p.passes} pases · {p.code}</span>
+                          <span className="text-stone-500">{p.passes} pases · UUID asignado</span>
                         </li>
                       ))}
                       {importedPreview.length > 5 && (
@@ -681,104 +955,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   type="button"
                   disabled={importedPreview.length === 0 || isImporting}
                   onClick={handleConfirmImport}
-                  className="px-5 py-2 bg-emerald-900 hover:bg-emerald-800 text-amber-50 rounded-xl text-xs font-cinzel uppercase tracking-wider transition-all disabled:opacity-50 shadow-sm"
+                  className="px-5 py-2 bg-emerald-950 hover:bg-emerald-900 text-amber-50 rounded-xl text-xs font-cinzel uppercase tracking-wider transition-all disabled:opacity-50 shadow-sm"
                 >
-                  {isImporting ? 'Importando...' : `Confirmar e Importar (${importedPreview.length})`}
+                  {isImporting ? 'Importando...' : `Importar ${importedPreview.length} Invitados`}
                 </button>
               </div>
-            </div>
-          </div>
-        )}
-
-        {/* Modal: Add New Single Guest */}
-        {showAddModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-150">
-            <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-stone-200">
-              <div className="flex items-center justify-between mb-4 pb-2 border-b border-stone-100">
-                <h3 className="font-serif-title text-2xl font-medium text-emerald-950">
-                  Agregar Invitado
-                </h3>
-                <button onClick={() => setShowAddModal(false)} className="text-stone-400 hover:text-stone-700">
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              <form onSubmit={handleCreateGuest} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-cinzel uppercase tracking-wider text-stone-700 mb-1">
-                    Nombre o Familia *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={newName}
-                    onChange={(e) => handleNameChange(e.target.value)}
-                    placeholder="Ej. Familia Rodríguez o Sofía Morales"
-                    className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-xs focus:ring-1 focus:ring-emerald-800 focus:outline-none"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-cinzel uppercase tracking-wider text-stone-700 mb-1">
-                      Código Único *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={newCode}
-                      onChange={(e) => setNewCode(e.target.value.toUpperCase())}
-                      placeholder="Ej. FAMRODRIGUEZ"
-                      className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-xs font-mono font-semibold focus:ring-1 focus:ring-emerald-800 focus:outline-none"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-cinzel uppercase tracking-wider text-stone-700 mb-1">
-                      Pases Reservados *
-                    </label>
-                    <input
-                      type="number"
-                      min={1}
-                      max={10}
-                      required
-                      value={newPasses}
-                      onChange={(e) => setNewPasses(parseInt(e.target.value) || 1)}
-                      className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-xs focus:ring-1 focus:ring-emerald-800 focus:outline-none"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-cinzel uppercase tracking-wider text-stone-700 mb-1">
-                    WhatsApp / Teléfono (opcional)
-                  </label>
-                  <input
-                    type="text"
-                    value={newPhone}
-                    onChange={(e) => setNewPhone(e.target.value)}
-                    placeholder="+57 300 000 0000"
-                    className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-xs focus:ring-1 focus:ring-emerald-800 focus:outline-none"
-                  />
-                </div>
-
-                <div className="pt-2 flex justify-end gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowAddModal(false)}
-                    className="px-4 py-2 rounded-xl text-xs font-cinzel uppercase text-stone-600 hover:bg-stone-100"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isSavingGuest}
-                    className="px-5 py-2 bg-emerald-900 hover:bg-emerald-800 text-amber-50 rounded-xl text-xs font-cinzel uppercase tracking-wider transition-all disabled:opacity-50"
-                  >
-                    {isSavingGuest ? 'Guardando...' : 'Guardar Invitado'}
-                  </button>
-                </div>
-              </form>
             </div>
           </div>
         )}
@@ -801,11 +982,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
               <div className="text-xs text-stone-600 space-y-4 mb-6">
                 <p>
-                  Para conectar tu base de datos en Supabase y guardar las confirmaciones en tiempo real:
+                  Para conectar tu base de datos en Supabase y sincronizar las confirmaciones en tiempo real:
                 </p>
                 <ol className="list-decimal list-inside space-y-2 bg-stone-50 p-3.5 rounded-xl border border-stone-200">
                   <li>Inicia sesión en tu cuenta de <strong>supabase.com</strong>.</li>
-                  <li>Ve a tu proyecto y copia el script <code>supabase_schema.sql</code> que preparamos en la carpeta de este proyecto y córrelo en el <strong>SQL Editor</strong>.</li>
+                  <li>Ve a tu proyecto y copia el script <code>supabase_schema.sql</code> en el <strong>SQL Editor</strong>.</li>
                   <li>Copia tu <strong>Project URL</strong> y tu <strong>Anon Key</strong> (en <em>Project Settings ➔ API</em>) y pégalos aquí abajo:</li>
                 </ol>
 
@@ -858,7 +1039,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   <button
                     type="button"
                     onClick={() => saveSupabaseCredentials(supabaseUrl, supabaseKey)}
-                    className="px-5 py-2 bg-emerald-900 hover:bg-emerald-800 text-amber-50 rounded-xl text-xs font-cinzel uppercase tracking-wider transition-all shadow-sm"
+                    className="px-5 py-2 bg-emerald-950 hover:bg-emerald-900 text-amber-50 rounded-xl text-xs font-cinzel uppercase tracking-wider transition-all shadow-sm"
                   >
                     Guardar y Conectar
                   </button>

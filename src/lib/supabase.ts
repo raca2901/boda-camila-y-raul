@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Guest } from '../types/wedding';
+import { generateUUID } from '../types/wedding';
 
 // Read from Vite environment variables or localStorage (allows live config in admin)
 const getSupabaseConfig = () => {
@@ -32,6 +33,21 @@ export const clearSupabaseCredentials = () => {
   window.location.reload();
 };
 
+// Map raw Supabase DB record to Guest interface
+const mapRowToGuest = (row: any): Guest => ({
+  id: row.id,
+  code: row.code,
+  name: row.name,
+  phone: row.phone,
+  passes: row.passes || 1,
+  confirmedPasses: row.confirmed_passes || 0,
+  status: row.status || 'pending',
+  dietaryPreference: row.dietary_preference || 'standard',
+  dietaryNotes: row.dietary_notes || '',
+  notes: row.notes || '',
+  updatedAt: row.updated_at,
+});
+
 // Supabase helper functions
 export const fetchGuestsFromDb = async (): Promise<Guest[] | null> => {
   if (!supabase) return null;
@@ -46,21 +62,47 @@ export const fetchGuestsFromDb = async (): Promise<Guest[] | null> => {
       return null;
     }
 
-    return (data || []).map((row: any) => ({
-      id: row.id,
-      code: row.code,
-      name: row.name,
-      phone: row.phone,
-      passes: row.passes || 1,
-      confirmedPasses: row.confirmed_passes || 0,
-      status: row.status || 'pending',
-      dietaryPreference: row.dietary_preference || 'standard',
-      dietaryNotes: row.dietary_notes || '',
-      notes: row.notes || '',
-      updatedAt: row.updated_at,
-    }));
+    return (data || []).map(mapRowToGuest);
   } catch (err) {
     console.error('Exception fetching from Supabase:', err);
+    return null;
+  }
+};
+
+// Fetch single guest by UUID or Code
+export const fetchGuestByUuidOrCode = async (identifier: string): Promise<Guest | null> => {
+  if (!supabase || !identifier) return null;
+  const cleanId = identifier.trim();
+
+  try {
+    // If it looks like a UUID format, query by id first
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cleanId);
+    if (isUuid) {
+      const { data, error } = await supabase
+        .from('guests')
+        .select('*')
+        .eq('id', cleanId)
+        .maybeSingle();
+
+      if (!error && data) {
+        return mapRowToGuest(data);
+      }
+    }
+
+    // Try query by code (case-insensitive)
+    const { data: codeData, error: codeErr } = await supabase
+      .from('guests')
+      .select('*')
+      .ilike('code', cleanId)
+      .maybeSingle();
+
+    if (!codeErr && codeData) {
+      return mapRowToGuest(codeData);
+    }
+
+    return null;
+  } catch (err) {
+    console.error('Exception finding guest in Supabase:', err);
     return null;
   }
 };
@@ -91,19 +133,21 @@ export const updateGuestRsvpInDb = async (guest: Guest): Promise<boolean> => {
   }
 };
 
-export const insertGuestInDb = async (guest: Omit<Guest, 'id'>): Promise<Guest | null> => {
+export const insertGuestInDb = async (guest: Omit<Guest, 'id'> & { id?: string }): Promise<Guest | null> => {
   if (!supabase) return null;
   try {
+    const guestId = guest.id || generateUUID();
     const { data, error } = await supabase
       .from('guests')
       .insert([
         {
-          code: guest.code.toUpperCase().trim(),
+          id: guestId,
+          code: (guest.code || guestId.slice(0, 8)).toUpperCase().trim(),
           name: guest.name.trim(),
           phone: guest.phone || '',
           passes: guest.passes,
-          confirmed_passes: guest.confirmedPasses,
-          status: guest.status,
+          confirmed_passes: guest.confirmedPasses || 0,
+          status: guest.status || 'pending',
           dietary_preference: guest.dietaryPreference || 'standard',
           dietary_notes: guest.dietaryNotes || '',
           notes: guest.notes || '',
@@ -117,19 +161,7 @@ export const insertGuestInDb = async (guest: Omit<Guest, 'id'>): Promise<Guest |
       return null;
     }
 
-    return {
-      id: data.id,
-      code: data.code,
-      name: data.name,
-      phone: data.phone,
-      passes: data.passes,
-      confirmedPasses: data.confirmed_passes,
-      status: data.status,
-      dietaryPreference: data.dietary_preference,
-      dietaryNotes: data.dietary_notes,
-      notes: data.notes,
-      updatedAt: data.updated_at,
-    };
+    return mapRowToGuest(data);
   } catch (err) {
     console.error('Exception adding guest to Supabase:', err);
     return null;

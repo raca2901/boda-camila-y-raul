@@ -1,5 +1,5 @@
 -- =========================================================================
--- ESQUEMA SQL PARA BODA: CAMILA & NOVIAL (SUPABASE)
+-- ESQUEMA SQL PARA BODA: CAMILA & RAÚL (SUPABASE)
 -- Copia y pega este script en el "SQL Editor" de tu proyecto de Supabase.
 -- =========================================================================
 
@@ -49,15 +49,20 @@ FOR DELETE
 TO anon, authenticated 
 USING (true);
 
--- 4. Insertar datos de prueba iniciales
-INSERT INTO public.guests (code, name, phone, passes, status)
+-- 4. Insertar datos de prueba iniciales con UUIDs únicos
+INSERT INTO public.guests (id, code, name, phone, passes, status)
 VALUES 
-    ('FLIAPEREZ', 'Familia Pérez Gómez', '+573001234567', 4, 'pending'),
-    ('ANDRESL', 'Andrés Felipe López', '+573109876543', 2, 'confirmed'),
-    ('MARIAV', 'María Victoria Restrepo', '+573205551234', 1, 'pending'),
-    ('CARLOSM', 'Carlos Mario & Esposa', '+573017778899', 2, 'declined')
-ON CONFLICT (code) DO NOTHING;
+    ('e8a8b132-7fd8-4d5c-9c02-e22131ec8701', 'FLIAPEREZ', 'Familia Pérez Gómez', '+573001234567', 4, 'confirmed'),
+    ('92c58e41-0f38-4e89-a2e6-764bc5f8b902', 'MARIAV', 'María Victoria Restrepo', '+573109876543', 2, 'confirmed'),
+    ('15d97a63-b81f-4b0e-9134-2e9124a9c303', 'CARLOSM', 'Carlos Mario Mendoza', '+573204445566', 2, 'declined'),
+    ('6b3f71c4-9e52-47d1-a3f2-108154c8d404', 'VALENTINAR', 'Valentina Ramírez & Acompañante', '+573018889900', 2, 'pending'),
+    ('a42e85b9-2c17-48f0-b98a-530182d7e505', 'FELIPES', 'Felipe Soto', '+573157772211', 1, 'pending')
+ON CONFLICT (id) DO UPDATE SET
+    name = EXCLUDED.name,
+    passes = EXCLUDED.passes,
+    phone = EXCLUDED.phone;
 
--- Índices para búsqueda rápida por código y por estado
+-- Índices para búsqueda ultra rápida por ID (UUID) y por código
+CREATE INDEX IF NOT EXISTS idx_guests_id ON public.guests(id);
 CREATE INDEX IF NOT EXISTS idx_guests_code ON public.guests(code);
 CREATE INDEX IF NOT EXISTS idx_guests_status ON public.guests(status);

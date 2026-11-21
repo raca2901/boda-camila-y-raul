@@ -1,16 +1,21 @@
 import { useState } from 'react';
-import { Lock, Music, VolumeX, Menu, X } from 'lucide-react';
+import { Lock, Music, VolumeX, Menu, X, LogOut } from 'lucide-react';
+import type { Guest } from '../types/wedding';
 
 interface NavbarProps {
   onOpenAdmin: () => void;
   isPlayingMusic: boolean;
   onToggleMusic: () => void;
+  currentGuest?: Guest | null;
+  onExitGuest?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
   onOpenAdmin,
   isPlayingMusic,
   onToggleMusic,
+  currentGuest,
+  onExitGuest,
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -55,7 +60,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           ))}
         </div>
 
-        {/* Action buttons (Music Player & Admin) */}
+        {/* Action buttons (Music Player, Guest Pill & Admin) */}
         <div className="flex items-center gap-2 sm:gap-3">
           
           {/* Music Control Pill - Narnia */}
@@ -77,7 +82,19 @@ export const Navbar: React.FC<NavbarProps> = ({
             </span>
           </button>
 
-          {/* Admin Access Button */}
+          {/* Guest exit button (if viewing private invite) */}
+          {currentGuest && onExitGuest && (
+            <button
+              onClick={onExitGuest}
+              title="Salir de esta invitación privada"
+              className="hidden lg:flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] text-stone-500 hover:text-rose-700 hover:bg-rose-50 border border-stone-200 transition-all font-cinzel"
+            >
+              <LogOut className="w-3 h-3" />
+              <span>Bloquear</span>
+            </button>
+          )}
+
+          {/* Admin Access Button (Novios) */}
           <button
             onClick={onOpenAdmin}
             title="Panel de Administración (Novios)"
@@ -115,6 +132,17 @@ export const Navbar: React.FC<NavbarProps> = ({
               {link.label}
             </a>
           ))}
+          {currentGuest && onExitGuest && (
+            <button
+              onClick={() => {
+                setMobileMenuOpen(false);
+                onExitGuest();
+              }}
+              className="w-full text-center text-xs py-2 text-stone-500 hover:text-rose-700 font-cinzel"
+            >
+              Cerrar Invitación Privada
+            </button>
+          )}
         </div>
       )}
     </nav>

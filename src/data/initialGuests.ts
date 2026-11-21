@@ -25,7 +25,7 @@ export const INITIAL_WEDDING_CONFIG: WeddingConfig = {
 
 export const INITIAL_GUESTS: Guest[] = [
   {
-    id: 'g-1',
+    id: 'e8a8b132-7fd8-4d5c-9c02-e22131ec8701',
     code: 'FLIAPEREZ',
     name: 'Familia Pérez Gómez',
     phone: '+57 300 123 4567',
@@ -37,7 +37,7 @@ export const INITIAL_GUESTS: Guest[] = [
     updatedAt: new Date().toISOString(),
   },
   {
-    id: 'g-2',
+    id: '92c58e41-0f38-4e89-a2e6-764bc5f8b902',
     code: 'MARIAV',
     name: 'María Victoria Restrepo',
     phone: '+57 310 987 6543',
@@ -50,7 +50,7 @@ export const INITIAL_GUESTS: Guest[] = [
     updatedAt: new Date().toISOString(),
   },
   {
-    id: 'g-3',
+    id: '15d97a63-b81f-4b0e-9134-2e9124a9c303',
     code: 'CARLOSM',
     name: 'Carlos Mario Mendoza',
     phone: '+57 320 444 5566',
@@ -61,7 +61,7 @@ export const INITIAL_GUESTS: Guest[] = [
     updatedAt: new Date().toISOString(),
   },
   {
-    id: 'g-4',
+    id: '6b3f71c4-9e52-47d1-a3f2-108154c8d404',
     code: 'VALENTINAR',
     name: 'Valentina Ramírez & Acompañante',
     phone: '+57 301 888 9900',
@@ -70,7 +70,7 @@ export const INITIAL_GUESTS: Guest[] = [
     status: 'pending',
   },
   {
-    id: 'g-5',
+    id: 'a42e85b9-2c17-48f0-b98a-530182d7e505',
     code: 'FELIPES',
     name: 'Felipe Soto',
     phone: '+57 315 777 2211',
