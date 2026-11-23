@@ -115,6 +115,19 @@ Lugar: Copacabana, Antioquia (Área Metropolitana de Medellín)
 - Panel privado de los novios accesible con PIN 2027 para crear enlaces, 
   enviar por WhatsApp y descargar reportes para banquete.
 
+9. EL AUTÉNTICO ROPERO DE NARNIA (PORTAL DE BIENVENIDA)
+--------------------------------------------------------------------------------
+- Diseño Oficial: Se integró el modelo original del ropero de la película de 
+  Narnia (con las columnas talladas de Aslan, el león, la corona en el panel 
+  superior, el Árbol sagrado en el centro y el Sol naciente en el panel inferior).
+- Apertura en Perspectiva 3D: La puerta de madera tallada gira suavemente sobre 
+  sus bisagras, revelando el resplandor y el bosque nevado con el farol encendido.
+- Música Sincronizada: Al tocar o abrir el ropero, arranca de inmediato la melodía 
+  oficial "The Wardrobe" en sincronía perfecta sin bloqueos de navegador.
+- Lectura con Calma (Sin Prisa): El mensaje de bienvenida ya NO desaparece rápido. 
+  Permanece visible todo el tiempo que el invitado desee para leerlo con tranquilidad, 
+  y cuenta con un botón radiante "Entrar a Nuestra Boda" para avanzar a su propio ritmo.
+
 ================================================================================
 ESTADO DEL DESPLIEGUE:
 - Repositorio GitHub: https://github.com/raca2901/boda-camila-y-raul
