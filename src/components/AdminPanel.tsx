@@ -237,34 +237,67 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     document.body.removeChild(a);
   };
 
+  const handleCopyCardImage = async () => {
+    if (!cardPreviewBlob) return;
+    try {
+      if (navigator.clipboard && 'write' in navigator.clipboard && typeof ClipboardItem !== 'undefined') {
+        await navigator.clipboard.write([new ClipboardItem({ 'image/png': cardPreviewBlob })]);
+        setShareFeedback(
+          '¡Imagen copiada! Ahora ve a WhatsApp, pégala (Ctrl+V), y luego presiona "Copiar Mensaje" para pegarlo en "Añade un comentario" debajo de la imagen.'
+        );
+        return;
+      }
+    } catch {
+      // Fallback to download
+    }
+    handleDownloadCard();
+    setShareFeedback(
+      'Tarjeta descargada. Adjúntala primero en WhatsApp y pega el mensaje en "Añade un comentario" para que quede la imagen arriba y el texto debajo.'
+    );
+  };
+
+  const handleCopyFormattedMessage = async () => {
+    if (!cardPreviewGuest) return;
+    const message = buildWhatsAppMessage(cardPreviewGuest);
+    try {
+      await navigator.clipboard.writeText(message);
+      setShareFeedback(
+        '¡Mensaje copiado! Pégalo en el campo "Añade un comentario..." justo debajo de la imagen en WhatsApp y envía.'
+      );
+    } catch {
+      setShareFeedback('No se pudo copiar automáticamente el texto.');
+    }
+  };
+
   const handleNativeShareCard = async () => {
     if (!cardPreviewGuest || !cardPreviewBlob) return;
     const message = buildWhatsAppMessage(cardPreviewGuest);
     const file = new File([cardPreviewBlob], cardPreviewFilename, { type: 'image/png' });
 
+    // Always copy the formatted text first so the user can paste it right below the image as a single caption
+    try {
+      await navigator.clipboard.writeText(message);
+    } catch {
+      // Ignore if clipboard blocked
+    }
+
+    // Share ONLY the image file (not text+file together) so WhatsApp never sends text first as a separate bubble!
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
       try {
+        setShareFeedback(
+          'El texto ya quedó copiado. Al abrirse la imagen en WhatsApp, solo pega el texto en "Añade un comentario..." para que quede la imagen arriba y el texto debajo en un solo mensaje.'
+        );
         await navigator.share({
-          title: `Invitación de Boda · ${cardPreviewGuest.name}`,
-          text: message,
           files: [file],
         });
         return;
       } catch {
-        // User cancelled or share failed; fall through to helpful fallback
+        // User cancelled or share failed; fall through
       }
     }
 
-    // Desktop fallback: download card PNG + copy formatted WhatsApp message
-    handleDownloadCard();
-    try {
-      await navigator.clipboard.writeText(message);
-      setShareFeedback(
-        'Tarjeta descargada y mensaje copiado al portapapeles. Solo arrastra la imagen a WhatsApp y pega el mensaje.'
-      );
-    } catch {
-      setShareFeedback('Tarjeta descargada. Ahora puedes enviarla junto al enlace por WhatsApp.');
-    }
+    // Desktop fallback: copy image directly to clipboard
+    await handleCopyCardImage();
   };
 
   const handleExportCsv = () => {
@@ -1214,8 +1247,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 </div>
               )}
 
-              {/* Action Buttons */}
-              <div className="space-y-2">
+              {/* Action Buttons — Image FIRST on top, Text BELOW as caption in 1 single WhatsApp bubble */}
+              <div className="space-y-2.5">
+                <div className="p-3 rounded-xl bg-amber-100/70 border border-amber-400/40 text-[11px] text-amber-950 leading-relaxed">
+                  <strong>Para enviar en 1 solo mensaje (Imagen arriba + Texto debajo):</strong> envía o pega primero la <strong>imagen</strong> y pega el <strong>texto</strong> en <em>«Añade un comentario...»</em> antes de enviar.
+                </div>
+
                 <button
                   type="button"
                   disabled={!cardPreviewBlob}
@@ -1223,10 +1260,20 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   className="w-full py-3 px-4 bg-emerald-950 hover:bg-emerald-900 disabled:opacity-50 text-amber-100 border border-amber-400/50 rounded-xl text-xs font-cinzel uppercase tracking-wider flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer"
                 >
                   <Share2 className="w-4 h-4 text-amber-300" />
-                  <span>Compartir Imagen + Mensaje</span>
+                  <span>1. Enviar / Copiar Imagen (copia el texto)</span>
                 </button>
 
                 <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    disabled={!cardPreviewGuest}
+                    onClick={handleCopyFormattedMessage}
+                    className="py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-xl text-xs font-cinzel uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                    <span>2. Copiar Texto</span>
+                  </button>
+
                   <button
                     type="button"
                     disabled={!cardPreviewDataUrl}
@@ -1236,21 +1283,17 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     <Download className="w-3.5 h-3.5" />
                     <span>Descargar PNG</span>
                   </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleSendWhatsApp(cardPreviewGuest)}
-                    className="py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-cinzel uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer"
-                  >
-                    <MessageCircle className="w-3.5 h-3.5" />
-                    <span>Abrir WhatsApp</span>
-                  </button>
                 </div>
-              </div>
 
-              <p className="text-[11px] text-stone-500 text-center leading-relaxed">
-                En celular, <strong>Compartir Imagen + Mensaje</strong> adjunta esta tarjeta directo en WhatsApp. Si envías solo el enlace, WhatsApp mostrará automáticamente la portada de Narnia.
-              </p>
+                <button
+                  type="button"
+                  onClick={() => handleSendWhatsApp(cardPreviewGuest)}
+                  className="w-full py-2 px-3 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl text-[11px] font-cinzel uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                >
+                  <MessageCircle className="w-3.5 h-3.5 text-emerald-700" />
+                  <span>Solo abrir WhatsApp con enlace y portada</span>
+                </button>
+              </div>
             </div>
           </div>
         )}
