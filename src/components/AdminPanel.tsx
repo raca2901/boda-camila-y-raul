@@ -19,10 +19,13 @@ import {
   FileSpreadsheet,
   ExternalLink,
   Sparkles,
+  Image as ImageIcon,
+  Share2,
 } from 'lucide-react';
 import type { Guest, RsvpStatus } from '../types/wedding';
 import { generateUUID } from '../types/wedding';
 import { isConfigured, saveSupabaseCredentials, clearSupabaseCredentials } from '../lib/supabase';
+import { generateGuestInviteCard } from '../lib/inviteCardGenerator';
 
 interface AdminPanelProps {
   isOpen: boolean;
@@ -72,6 +75,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
   // Copy feedback
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  // Personalized Narnia Visual Invitation Card modal state
+  const [cardPreviewGuest, setCardPreviewGuest] = useState<Guest | null>(null);
+  const [cardPreviewDataUrl, setCardPreviewDataUrl] = useState<string | null>(null);
+  const [cardPreviewBlob, setCardPreviewBlob] = useState<Blob | null>(null);
+  const [cardPreviewFilename, setCardPreviewFilename] = useState<string>('invitacion-boda.png');
+  const [isGeneratingCard, setIsGeneratingCard] = useState(false);
+  const [shareFeedback, setShareFeedback] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
@@ -162,14 +173,98 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     setTimeout(() => setCopiedId(null), 2500);
   };
 
-  const handleSendWhatsApp = (guest: Guest) => {
+  const buildWhatsAppMessage = (guest: Guest) => {
     const link = getGuestLink(guest);
-    const text = encodeURIComponent(
-      `¡Hola ${guest.name}! ✨💍\n\nCon enorme alegría y emoción, Camila y Raúl te invitamos formalmente a celebrar nuestra boda el 31 de Enero de 2027 en Copacabana (Medellín).\n\nHemos preparado una invitación privada y exclusiva para ti donde puedes ver todos los detalles del evento (ubicación, código de vestimenta) y confirmar tu asistencia:\n\n👉 ${link}\n\n¡Esperamos con el corazón contar contigo en este gran día!`
-    );
+    const passesText =
+      guest.passes === 1
+        ? '1 pase reservado especialmente para ti'
+        : `${guest.passes} pases reservados especialmente para ustedes`;
+
+    return [
+      `✦ *LAS CRÓNICAS DE NUESTRA BODA* ✦`,
+      `_Raúl Ernesto & María Camila_`,
+      ``,
+      `¡Hola *${guest.name}*! ♡`,
+      ``,
+      `Con el corazón lleno de alegría, queremos invitarte a cruzar las puertas del ropero y acompañarnos en la gran aventura de unir nuestras vidas el próximo *31 de enero de 2027* en Copacabana, Antioquia.`,
+      ``,
+      `Hemos preparado una *invitación privada y exclusiva* (${passesText}), donde podrás descubrir nuestra historia, los detalles del gran día y confirmar tu asistencia:`,
+      ``,
+      `▸ *Abre tu invitación aquí:*`,
+      `${link}`,
+      ``,
+      `_«A veces, abrir una puerta es el inicio de la mayor aventura de todas.»_`,
+      ``,
+      `¡Esperamos con todo el corazón celebrar juntos este día inolvidable! ✦`,
+    ].join('\n');
+  };
+
+  const handleSendWhatsApp = (guest: Guest) => {
+    const text = encodeURIComponent(buildWhatsAppMessage(guest));
     const cleanPhone = (guest.phone || '').replace(/\D/g, '');
-    const url = cleanPhone ? `https://wa.me/${cleanPhone}?text=${text}` : `https://wa.me/?text=${text}`;
+    const url = cleanPhone
+      ? `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${text}`
+      : `https://api.whatsapp.com/send?text=${text}`;
     window.open(url, '_blank');
+  };
+
+  const handleOpenCardPreview = async (guest: Guest) => {
+    setCardPreviewGuest(guest);
+    setCardPreviewDataUrl(null);
+    setCardPreviewBlob(null);
+    setShareFeedback(null);
+    setIsGeneratingCard(true);
+    try {
+      const { dataUrl, blob, filename } = await generateGuestInviteCard(guest);
+      setCardPreviewDataUrl(dataUrl);
+      setCardPreviewBlob(blob);
+      setCardPreviewFilename(filename);
+    } catch (err) {
+      console.error('Error generating invitation card:', err);
+      setShareFeedback('No se pudo generar la tarjeta en este navegador.');
+    } finally {
+      setIsGeneratingCard(false);
+    }
+  };
+
+  const handleDownloadCard = () => {
+    if (!cardPreviewDataUrl) return;
+    const a = document.createElement('a');
+    a.href = cardPreviewDataUrl;
+    a.download = cardPreviewFilename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
+
+  const handleNativeShareCard = async () => {
+    if (!cardPreviewGuest || !cardPreviewBlob) return;
+    const message = buildWhatsAppMessage(cardPreviewGuest);
+    const file = new File([cardPreviewBlob], cardPreviewFilename, { type: 'image/png' });
+
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({
+          title: `Invitación de Boda · ${cardPreviewGuest.name}`,
+          text: message,
+          files: [file],
+        });
+        return;
+      } catch {
+        // User cancelled or share failed; fall through to helpful fallback
+      }
+    }
+
+    // Desktop fallback: download card PNG + copy formatted WhatsApp message
+    handleDownloadCard();
+    try {
+      await navigator.clipboard.writeText(message);
+      setShareFeedback(
+        'Tarjeta descargada y mensaje copiado al portapapeles. Solo arrastra la imagen a WhatsApp y pega el mensaje.'
+      );
+    } catch {
+      setShareFeedback('Tarjeta descargada. Ahora puedes enviarla junto al enlace por WhatsApp.');
+    }
   };
 
   const handleExportCsv = () => {
@@ -630,12 +725,21 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                             </td>
 
                             {/* Actions */}
-                            <td className="py-3.5 px-4 text-right space-x-1 shrink-0">
+                            <td className="py-3.5 px-4 text-right space-x-1 shrink-0 whitespace-nowrap">
+                              {/* Personalized Visual Invitation Card */}
+                              <button
+                                onClick={() => handleOpenCardPreview(guest)}
+                                title="Generar tarjeta visual personalizada (imagen para WhatsApp)"
+                                className="p-2 text-amber-950 bg-amber-200 hover:bg-amber-300 rounded-xl transition-all shadow-xs inline-block cursor-pointer"
+                              >
+                                <ImageIcon className="w-4 h-4" />
+                              </button>
+
                               {/* Send WhatsApp */}
                               <button
                                 onClick={() => handleSendWhatsApp(guest)}
                                 title="Enviar invitación personalizada por WhatsApp"
-                                className="p-2 text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl transition-all shadow-xs inline-block"
+                                className="p-2 text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl transition-all shadow-xs inline-block cursor-pointer"
                               >
                                 <MessageCircle className="w-4 h-4" />
                               </button>
@@ -815,28 +919,36 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2 pt-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-2">
+                    <button
+                      onClick={() => handleOpenCardPreview(justAddedGuest)}
+                      className="py-3 bg-amber-400 hover:bg-amber-300 text-emerald-950 font-semibold rounded-xl text-xs font-cinzel uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-sm transition-all cursor-pointer"
+                    >
+                      <ImageIcon className="w-4 h-4" />
+                      <span>Ver Tarjeta</span>
+                    </button>
+
                     <button
                       onClick={() => handleSendWhatsApp(justAddedGuest)}
-                      className="py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-cinzel uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-sm transition-all"
+                      className="py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-cinzel uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-sm transition-all cursor-pointer"
                     >
                       <MessageCircle className="w-4 h-4" />
-                      <span>Enviar WhatsApp</span>
+                      <span>WhatsApp</span>
                     </button>
 
                     <button
                       onClick={() => handleCopyLink(justAddedGuest)}
-                      className="py-3 bg-stone-100 hover:bg-stone-200 text-stone-800 rounded-xl text-xs font-cinzel uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all"
+                      className="py-3 bg-stone-100 hover:bg-stone-200 text-stone-800 rounded-xl text-xs font-cinzel uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer"
                     >
                       {copiedId === justAddedGuest.id ? (
                         <>
                           <Check className="w-4 h-4 text-emerald-600" />
-                          <span>¡Enlace Copiado!</span>
+                          <span>¡Copiado!</span>
                         </>
                       ) : (
                         <>
                           <Copy className="w-4 h-4 text-stone-600" />
-                          <span>Copiar Enlace</span>
+                          <span>Copiar Link</span>
                         </>
                       )}
                     </button>
@@ -1045,6 +1157,100 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   </button>
                 </div>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal: Personalized Narnia Invitation Card Preview & Share */}
+        {cardPreviewGuest && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-in fade-in duration-150">
+            <div className="bg-[#fbf6ea] rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-2xl border-2 border-amber-500/45 max-h-[94vh] overflow-y-auto space-y-4">
+              <div className="flex items-center justify-between border-b border-amber-900/15 pb-3">
+                <div>
+                  <span className="text-[10px] font-cinzel uppercase tracking-widest text-amber-800 font-semibold block">
+                    Tarjeta Personalizada de Narnia
+                  </span>
+                  <h3 className="font-serif-title text-xl sm:text-2xl font-medium text-emerald-950">
+                    Para: {cardPreviewGuest.name}
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCardPreviewGuest(null);
+                    setShareFeedback(null);
+                  }}
+                  className="p-1.5 rounded-full hover:bg-amber-900/10 text-stone-500 cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Generated Card Preview */}
+              <div className="rounded-2xl overflow-hidden bg-[#071411] border border-amber-500/40 shadow-xl flex items-center justify-center min-h-[320px]">
+                {isGeneratingCard ? (
+                  <div className="py-16 text-center space-y-2 text-amber-200">
+                    <Sparkles className="w-7 h-7 mx-auto animate-spin text-amber-400" />
+                    <p className="text-xs font-cinzel uppercase tracking-wider">
+                      Ilustrando tarjeta real...
+                    </p>
+                  </div>
+                ) : cardPreviewDataUrl ? (
+                  <img
+                    src={cardPreviewDataUrl}
+                    alt={`Invitación personalizada para ${cardPreviewGuest.name}`}
+                    className="w-full h-auto block"
+                  />
+                ) : (
+                  <p className="text-xs text-amber-200/70 p-6 text-center">
+                    No se pudo cargar la vista previa.
+                  </p>
+                )}
+              </div>
+
+              {shareFeedback && (
+                <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-950 text-xs leading-relaxed">
+                  {shareFeedback}
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="space-y-2">
+                <button
+                  type="button"
+                  disabled={!cardPreviewBlob}
+                  onClick={handleNativeShareCard}
+                  className="w-full py-3 px-4 bg-emerald-950 hover:bg-emerald-900 disabled:opacity-50 text-amber-100 border border-amber-400/50 rounded-xl text-xs font-cinzel uppercase tracking-wider flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer"
+                >
+                  <Share2 className="w-4 h-4 text-amber-300" />
+                  <span>Compartir Imagen + Mensaje</span>
+                </button>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    disabled={!cardPreviewDataUrl}
+                    onClick={handleDownloadCard}
+                    className="py-2.5 px-3 bg-amber-100 hover:bg-amber-200 disabled:opacity-50 text-amber-950 border border-amber-400/40 rounded-xl text-xs font-cinzel uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    <span>Descargar PNG</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleSendWhatsApp(cardPreviewGuest)}
+                    className="py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-cinzel uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                  >
+                    <MessageCircle className="w-3.5 h-3.5" />
+                    <span>Abrir WhatsApp</span>
+                  </button>
+                </div>
+              </div>
+
+              <p className="text-[11px] text-stone-500 text-center leading-relaxed">
+                En celular, <strong>Compartir Imagen + Mensaje</strong> adjunta esta tarjeta directo en WhatsApp. Si envías solo el enlace, WhatsApp mostrará automáticamente la portada de Narnia.
+              </p>
             </div>
           </div>
         )}
