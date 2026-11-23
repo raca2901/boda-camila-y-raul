@@ -2,24 +2,26 @@ import { createClient } from '@supabase/supabase-js';
 import type { Guest } from '../types/wedding';
 import { generateUUID } from '../types/wedding';
 
-// Read from Vite environment variables or localStorage (allows live config in admin)
+// Default public Supabase project URL and publishable key (safe for frontend clients)
+const DEFAULT_SUPABASE_URL = 'https://cbxftdqqdgkgyheezbps.supabase.co';
+const DEFAULT_SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_Uym8J1t1cSmHVbi-aCMQEQ_TjbsHc4I';
+
+// Read from Vite environment variables, localStorage override, or built-in project defaults
 const getSupabaseConfig = () => {
   const envUrl = import.meta.env.VITE_SUPABASE_URL;
   const envKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
   const localUrl = localStorage.getItem('wedding_supabase_url');
   const localKey = localStorage.getItem('wedding_supabase_anon_key');
 
-  const url = localUrl || envUrl || '';
-  const key = localKey || envKey || '';
+  const url = localUrl || envUrl || DEFAULT_SUPABASE_URL;
+  const key = localKey || envKey || DEFAULT_SUPABASE_PUBLISHABLE_KEY;
 
   return { url, key, isConfigured: Boolean(url && key) };
 };
 
 export const { url, key, isConfigured } = getSupabaseConfig();
 
-export const supabase = isConfigured
-  ? createClient(url, key)
-  : null;
+export const supabase = isConfigured ? createClient(url, key) : null;
 
 export const saveSupabaseCredentials = (supabaseUrl: string, supabaseAnonKey: string) => {
   localStorage.setItem('wedding_supabase_url', supabaseUrl.trim());
@@ -34,19 +36,36 @@ export const clearSupabaseCredentials = () => {
 };
 
 // Map raw Supabase DB record to Guest interface
-const mapRowToGuest = (row: any): Guest => ({
-  id: row.id,
-  code: row.code,
-  name: row.name,
-  phone: row.phone,
-  passes: row.passes || 1,
-  confirmedPasses: row.confirmed_passes || 0,
-  status: row.status || 'pending',
-  dietaryPreference: row.dietary_preference || 'standard',
-  dietaryNotes: row.dietary_notes || '',
-  notes: row.notes || '',
-  updatedAt: row.updated_at,
+const mapRowToGuest = (row: Record<string, unknown>): Guest => ({
+  id: String(row.id),
+  code: String(row.code || ''),
+  name: String(row.name || ''),
+  phone: typeof row.phone === 'string' ? row.phone : '',
+  passes: typeof row.passes === 'number' ? row.passes : 1,
+  confirmedPasses: typeof row.confirmed_passes === 'number' ? row.confirmed_passes : 0,
+  status: (row.status as Guest['status']) || 'pending',
+  dietaryPreference: (row.dietary_preference as Guest['dietaryPreference']) || 'standard',
+  dietaryNotes: typeof row.dietary_notes === 'string' ? row.dietary_notes : '',
+  notes: typeof row.notes === 'string' ? row.notes : '',
+  updatedAt: typeof row.updated_at === 'string' ? row.updated_at : undefined,
 });
+
+const mapGuestToRow = (guest: Omit<Guest, 'id'> & { id?: string }) => {
+  const guestId = guest.id || generateUUID();
+  return {
+    id: guestId,
+    code: (guest.code || guestId.slice(0, 8)).toUpperCase().trim(),
+    name: guest.name.trim(),
+    phone: guest.phone || '',
+    passes: Math.max(1, guest.passes || 1),
+    confirmed_passes: Math.max(0, guest.confirmedPasses || 0),
+    status: guest.status || 'pending',
+    dietary_preference: guest.dietaryPreference || 'standard',
+    dietary_notes: guest.dietaryNotes || '',
+    notes: guest.notes || '',
+    updated_at: guest.updatedAt || new Date().toISOString(),
+  };
+};
 
 // Supabase helper functions
 export const fetchGuestsFromDb = async (): Promise<Guest[] | null> => {
@@ -62,7 +81,7 @@ export const fetchGuestsFromDb = async (): Promise<Guest[] | null> => {
       return null;
     }
 
-    return (data || []).map(mapRowToGuest);
+    return (data || []).map((row) => mapRowToGuest(row as Record<string, unknown>));
   } catch (err) {
     console.error('Exception fetching from Supabase:', err);
     return null;
@@ -75,7 +94,6 @@ export const fetchGuestByUuidOrCode = async (identifier: string): Promise<Guest 
   const cleanId = identifier.trim();
 
   try {
-    // If it looks like a UUID format, query by id first
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cleanId);
     if (isUuid) {
       const { data, error } = await supabase
@@ -85,11 +103,10 @@ export const fetchGuestByUuidOrCode = async (identifier: string): Promise<Guest 
         .maybeSingle();
 
       if (!error && data) {
-        return mapRowToGuest(data);
+        return mapRowToGuest(data as Record<string, unknown>);
       }
     }
 
-    // Try query by code (case-insensitive)
     const { data: codeData, error: codeErr } = await supabase
       .from('guests')
       .select('*')
@@ -97,7 +114,7 @@ export const fetchGuestByUuidOrCode = async (identifier: string): Promise<Guest 
       .maybeSingle();
 
     if (!codeErr && codeData) {
-      return mapRowToGuest(codeData);
+      return mapRowToGuest(codeData as Record<string, unknown>);
     }
 
     return null;
@@ -115,9 +132,9 @@ export const updateGuestRsvpInDb = async (guest: Guest): Promise<boolean> => {
       .update({
         status: guest.status,
         confirmed_passes: guest.confirmedPasses,
-        dietary_preference: guest.dietaryPreference,
-        dietary_notes: guest.dietaryNotes,
-        notes: guest.notes,
+        dietary_preference: guest.dietaryPreference || 'standard',
+        dietary_notes: guest.dietaryNotes || '',
+        notes: guest.notes || '',
         updated_at: new Date().toISOString(),
       })
       .eq('id', guest.id);
@@ -133,26 +150,15 @@ export const updateGuestRsvpInDb = async (guest: Guest): Promise<boolean> => {
   }
 };
 
-export const insertGuestInDb = async (guest: Omit<Guest, 'id'> & { id?: string }): Promise<Guest | null> => {
+export const insertGuestInDb = async (
+  guest: Omit<Guest, 'id'> & { id?: string }
+): Promise<Guest | null> => {
   if (!supabase) return null;
   try {
-    const guestId = guest.id || generateUUID();
+    const row = mapGuestToRow(guest);
     const { data, error } = await supabase
       .from('guests')
-      .insert([
-        {
-          id: guestId,
-          code: (guest.code || guestId.slice(0, 8)).toUpperCase().trim(),
-          name: guest.name.trim(),
-          phone: guest.phone || '',
-          passes: guest.passes,
-          confirmed_passes: guest.confirmedPasses || 0,
-          status: guest.status || 'pending',
-          dietary_preference: guest.dietaryPreference || 'standard',
-          dietary_notes: guest.dietaryNotes || '',
-          notes: guest.notes || '',
-        },
-      ])
+      .upsert([row], { onConflict: 'id' })
       .select()
       .single();
 
@@ -161,10 +167,29 @@ export const insertGuestInDb = async (guest: Omit<Guest, 'id'> & { id?: string }
       return null;
     }
 
-    return mapRowToGuest(data);
+    return mapRowToGuest(data as Record<string, unknown>);
   } catch (err) {
     console.error('Exception adding guest to Supabase:', err);
     return null;
+  }
+};
+
+export const upsertGuestsInDb = async (guestsToSync: Guest[]): Promise<boolean> => {
+  if (!supabase || guestsToSync.length === 0) return true;
+  try {
+    const rows = guestsToSync.map((g) => mapGuestToRow(g));
+    const { error } = await supabase
+      .from('guests')
+      .upsert(rows, { onConflict: 'id' });
+
+    if (error) {
+      console.error('Error syncing local guests to Supabase:', error);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error('Exception syncing local guests to Supabase:', err);
+    return false;
   }
 };
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { Story } from './components/Story';
@@ -17,19 +17,29 @@ import { INITIAL_GUESTS, INITIAL_WEDDING_CONFIG } from './data/initialGuests';
 import type { Guest, WeddingConfig } from './types/wedding';
 import {
   isConfigured,
+  supabase,
   fetchGuestsFromDb,
   fetchGuestByUuidOrCode,
   updateGuestRsvpInDb,
   insertGuestInDb,
+  upsertGuestsInDb,
   deleteGuestInDb,
 } from './lib/supabase';
+
+const DEMO_GUEST_IDS = new Set(INITIAL_GUESTS.map((g) => g.id));
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export function App() {
   const [config] = useState<WeddingConfig>(INITIAL_WEDDING_CONFIG);
   const [guests, setGuests] = useState<Guest[]>(() => {
-    const saved = localStorage.getItem('wedding_local_guests');
-    return saved ? JSON.parse(saved) : INITIAL_GUESTS;
+    try {
+      const saved = localStorage.getItem('wedding_local_guests');
+      return saved ? JSON.parse(saved) : INITIAL_GUESTS;
+    } catch {
+      return INITIAL_GUESTS;
+    }
   });
+  const [hasLoadedCloud, setHasLoadedCloud] = useState(!isConfigured);
 
   const [currentGuest, setCurrentGuest] = useState<Guest | null>(null);
   const [isWardrobeOpen, setIsWardrobeOpen] = useState(false);
@@ -37,25 +47,90 @@ export function App() {
   const [isPlayingMusic, setIsPlayingMusic] = useState(false);
   const [gateError, setGateError] = useState<string | null>(null);
 
-  // Load guests from Supabase if connected
-  const refreshGuests = async () => {
-    if (isConfigured) {
-      const dbGuests = await fetchGuestsFromDb();
-      if (dbGuests && dbGuests.length > 0) {
-        setGuests(dbGuests);
-        return;
+  // Load guests from Supabase (single source of truth across PC, mobile, and all guests)
+  const refreshGuests = useCallback(async () => {
+    if (!isConfigured) {
+      setHasLoadedCloud(true);
+      return;
+    }
+
+    const dbGuests = await fetchGuestsFromDb();
+    if (dbGuests === null) {
+      setHasLoadedCloud(true);
+      return;
+    }
+
+    // One-time automatic migration: if this device had custom guests saved locally
+    // before Supabase was connected, merge them safely into Supabase so nothing is lost.
+    const alreadyMigrated = localStorage.getItem('wedding_supabase_migrated_v1') === 'true';
+    if (!alreadyMigrated) {
+      try {
+        const rawLocal = localStorage.getItem('wedding_local_guests');
+        if (rawLocal) {
+          const parsedLocal: Guest[] = JSON.parse(rawLocal);
+          const dbIds = new Set(dbGuests.map((g) => g.id));
+          const customUnsynced = parsedLocal.filter(
+            (g) => UUID_REGEX.test(g.id) && !DEMO_GUEST_IDS.has(g.id) && !dbIds.has(g.id)
+          );
+
+          if (customUnsynced.length > 0) {
+            await upsertGuestsInDb(customUnsynced);
+            const mergedGuests = await fetchGuestsFromDb();
+            localStorage.setItem('wedding_supabase_migrated_v1', 'true');
+            if (mergedGuests !== null) {
+              setGuests(mergedGuests);
+              setHasLoadedCloud(true);
+              return;
+            }
+          }
+        }
+        localStorage.setItem('wedding_supabase_migrated_v1', 'true');
+      } catch (err) {
+        console.warn('Error migrating local guests:', err);
       }
     }
-  };
+
+    setGuests(dbGuests);
+    setHasLoadedCloud(true);
+  }, []);
 
   useEffect(() => {
     refreshGuests();
-  }, []);
+  }, [refreshGuests]);
 
-  // Sync to local storage for offline / preview resilience
+  // Also refresh when opening the Admin Panel so the count is always 100% up-to-date
   useEffect(() => {
-    localStorage.setItem('wedding_local_guests', JSON.stringify(guests));
-  }, [guests]);
+    if (isAdminOpen && isConfigured) {
+      refreshGuests();
+    }
+  }, [isAdminOpen, refreshGuests]);
+
+  // Subscribe to Supabase Realtime so PC and mobile stay synchronized live
+  useEffect(() => {
+    if (!supabase) return;
+
+    const channel = supabase
+      .channel('guests-realtime-sync')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'guests' },
+        () => {
+          refreshGuests();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [refreshGuests]);
+
+  // Keep local cache updated for fast reload resilience
+  useEffect(() => {
+    if (hasLoadedCloud) {
+      localStorage.setItem('wedding_local_guests', JSON.stringify(guests));
+    }
+  }, [guests, hasLoadedCloud]);
 
   // Read URL query parameter for UUID (?id=... or ?invitado=... or ?token=...)
   useEffect(() => {
@@ -72,7 +147,7 @@ export function App() {
 
       const cleanParam = guestParam.trim();
 
-      // Look in local guests list first
+      // Check already-loaded guests list first
       const foundLocal = guests.find(
         (g) =>
           g.id.toLowerCase() === cleanParam.toLowerCase() ||
@@ -81,15 +156,17 @@ export function App() {
 
       if (foundLocal) {
         setCurrentGuest(foundLocal);
+        setGateError(null);
         sessionStorage.setItem('wedding_current_guest_id', foundLocal.id);
         return;
       }
 
-      // If not in local, check Supabase if connected
+      // Query Supabase directly if not yet in state
       if (isConfigured) {
         const foundDb = await fetchGuestByUuidOrCode(cleanParam);
         if (foundDb) {
           setCurrentGuest(foundDb);
+          setGateError(null);
           sessionStorage.setItem('wedding_current_guest_id', foundDb.id);
           setGuests((prev) => {
             if (prev.some((g) => g.id === foundDb.id)) return prev;
@@ -99,11 +176,13 @@ export function App() {
         }
       }
 
-      setGateError('No encontramos una invitación con ese identificador. Por favor verifica tu enlace.');
+      if (hasLoadedCloud) {
+        setGateError('No encontramos una invitación con ese identificador. Por favor verifica tu enlace.');
+      }
     };
 
     checkUrlForGuest();
-  }, [guests]);
+  }, [guests, hasLoadedCloud]);
 
   // Handle guest RSVP update
   const handleUpdateGuest = async (updated: Guest): Promise<boolean> => {
@@ -127,13 +206,19 @@ export function App() {
     if (isConfigured) {
       const inserted = await insertGuestInDb(newGuest);
       if (inserted) {
-        setGuests((prev) => [...prev, inserted]);
+        setGuests((prev) =>
+          prev.some((g) => g.id === inserted.id)
+            ? prev.map((g) => (g.id === inserted.id ? inserted : g))
+            : [...prev, inserted]
+        );
         return true;
       }
     }
 
     // Local fallback
-    setGuests((prev) => [...prev, newGuest]);
+    setGuests((prev) =>
+      prev.some((g) => g.id === newGuest.id) ? prev : [...prev, newGuest]
+    );
     return true;
   };
 
