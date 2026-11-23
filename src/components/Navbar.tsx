@@ -8,6 +8,7 @@ interface NavbarProps {
   onToggleMusic: () => void;
   currentGuest?: Guest | null;
   onExitGuest?: () => void;
+  onReopenWardrobe?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -16,6 +17,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onToggleMusic,
   currentGuest,
   onExitGuest,
+  onReopenWardrobe,
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -63,6 +65,18 @@ export const Navbar: React.FC<NavbarProps> = ({
         {/* Action buttons (Music Player, Guest Pill & Admin) */}
         <div className="flex items-center gap-2 sm:gap-3">
           
+          {/* Reopen Wardrobe Button */}
+          {onReopenWardrobe && (
+            <button
+              onClick={onReopenWardrobe}
+              title="Volver a abrir el ropero de Narnia"
+              className="flex items-center gap-1 bg-stone-100 hover:bg-amber-100/70 border border-stone-200 rounded-full px-2.5 py-1 text-xs text-stone-700 hover:text-amber-900 transition-all font-cinzel text-[11px]"
+            >
+              <span>🚪</span>
+              <span className="hidden sm:inline">Ropero</span>
+            </button>
+          )}
+
           {/* Music Control Pill - Narnia */}
           <button
             onClick={onToggleMusic}

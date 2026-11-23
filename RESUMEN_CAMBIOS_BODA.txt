@@ -1,0 +1,122 @@
+================================================================================
+RESUMEN DE ACTUALIZACIONES Y RECOMENDACIONES DE CAMILA APLICADAS AL PROYECTO
+BODA: RAÚL ERNESTO & MARÍA CAMILA
+Fecha del Evento: 31 de Enero de 2027
+Lugar: Copacabana, Antioquia (Área Metropolitana de Medellín)
+================================================================================
+
+1. BANDA SONORA & EXPERIENCIA MUSICAL
+--------------------------------------------------------------------------------
+- Cambio de Canción: Se reemplazó la melodía anterior por la pieza oficial 
+  "The Wardrobe" (Harry Gregson-Williams), la emblemática música de Narnia que 
+  suena cuando Lucy abre el ropero y descubre el mundo nevado y el farol.
+- Reproducción Automática: Se implementó un detector de interacción para que la 
+  música empiece a sonar automáticamente con el primer toque, clic o inicio de 
+  desplazamiento del invitado.
+- Control Disponible: Se mantuvo el botón sutil "Narnia 🌲 / Música" en la barra 
+  superior para pausar o reactivar el sonido en cualquier momento.
+
+2. PRIMERA PÁGINA (PORTADA / HERO)
+--------------------------------------------------------------------------------
+- Frase del Farol: Actualizada al texto exacto solicitado por Camila:
+  «Acompáñanos en la gran aventura de abrir las puertas hacia un nuevo capítulo 
+  de nuestra historia».
+- Nombres Principales:
+    Raúl Ernesto
+    &
+    María Camila
+- Foto Inicial y Fondo:
+  * Se retiró completamente la etiqueta que decía "Guatapé".
+  * Se seleccionó una nueva foto donde ambos están mirándose a los ojos y 
+    sonriendo con ternura sentados en la banca campestre (foto-5).
+  * Se rediseñó el fondo con una atmósfera cálida, luminosa y mágica de bosque 
+    encantado (destellos dorados, bokeh sutil y tonos beige/crema).
+- Experiencia de Lectura:
+  * Se eliminó el botón de "Confirmar Asistencia" de la portada para no saltar 
+    al final antes de leer la historia.
+  * Se retiraron los botones de itinerario de la portada.
+  * Se conservó la cuenta regresiva hacia el 31 de enero de 2027 y el indicador 
+    para deslizar hacia abajo con tranquilidad.
+
+3. SEGUNDA PÁGINA («CONOCE NUESTRA TRAVESÍA»)
+--------------------------------------------------------------------------------
+- Encabezado:
+  * Título: "Conoce Nuestra Travesía"
+  * Frase: "Nacimos en la calidez de la costa y nos encontramos en la ciudad primaveral."
+- Los 4 Hitos de la Historia:
+  1. El Inicio de Cami (Los Palmitos, Sucre):
+     "En medio de poemas, libros y flores creció Camila, y vivió los primeros 
+     16 años de su vida en su pueblo natal, llena de sueños y fe."
+  2. El Inicio de Rau (Cartagena de Indias):
+     "En la ciudad amurallada, llena de historias y atardeceres dorados nació 
+     Raúl, y ahí vivió los primeros 4 años de su vida."
+  3. El Encuentro (Medellín, Antioquia):
+     "Y finalmente los caminos de Cami y Rau se juntaron en la ciudad de la 
+     eterna primavera, se conocieron hace 10 años, y lo que comenzó como una 
+     genuina amistad, hoy florece en los campos del amor."
+  4. El Sí, Acepto (31 de Enero de 2027):
+     "Y como si cruzáramos el ropero hacia el mundo Narniano que Cami tanto ama, 
+     hemos programado el 31 de enero como el día para unir nuestras vidas 
+     delante de Dios y de nuestros seres amados."
+
+4. TERCERA PÁGINA (RECUERDOS & VIDEO ESPECIAL)
+--------------------------------------------------------------------------------
+- Encabezado:
+  "Amamos hacernos fotos y videos y queremos compartir algunos de ellos contigo. 
+  Guardamos muchos recuerdos de lugares, en la tierra que nos acogió: Antioquia."
+- Galería: Selección de fotografías de sus momentos y paseos juntos.
+- Video Especial: Título actualizado:
+  «Ese fue el lugar donde Rau le pidió a Cami que fuera su esposa».
+
+5. CUÁNDO & DÓNDE (HORARIOS Y UBICACIÓN)
+--------------------------------------------------------------------------------
+- Horarios Claros (Sin itinerario por horas detallado):
+  * Hora de Llegada: 5:00 P.M. (Puntual para dar inicio a la ceremonia).
+  * Celebración & Cierre: Hasta la madrugada.
+- Entrada Principal: Fotografía destacada del portón campestre con su distintivo 
+  "Entrada Principal" para fácil reconocimiento al llegar.
+- Ubicación: Sede Campestre, Vereda El Noral, Copacabana, Antioquia.
+- Navegación al Final: Botones directos para Google Maps, Waze y agendar en 
+  Google Calendar.
+
+6. CÓDIGO DE VESTIMENTA
+--------------------------------------------------------------------------------
+- Título: "Tu Esencia & Comodidad"
+- Mensaje:
+  "Queremos que ese día puedas lucir con tu esencia, y disfrutes de la comodidad 
+  de ser tú."
+- Dos Peticiones Importantes:
+  1. "Sé coherente con el contexto, es un momento profundamente significativo y valioso."
+  2. "El color blanco está reservado exclusivamente para Cami, de resto todos los 
+     colores que existen en la creación están habilitados para que puedas escoger 
+     cuál usar."
+- Foto Destacada: Se incluyó la fotografía de María Camila vestida de blanco 
+  con marco de gala y distintivo de reserva de color.
+- Paletas de Inspiración: Se mantuvieron como guía visual opcional la gama floral 
+  de rosas y la costera de azules.
+
+7. LLUVIA DE SOBRES (SIN MENCIÓN DE MESA DE REGALOS)
+--------------------------------------------------------------------------------
+- Se retiró la frase "Mesa de Regalos" para evitar regalos físicos.
+- Mensaje:
+  "Tu compañía y buenos deseos son nuestro mejor regalo. Si además deseas tener 
+  un detalle con nosotros para dar inicio a nuestro nuevo hogar:"
+- Modalidades:
+  * Lluvia de Sobres: Cofre especial ubicado en la recepción para sobres y cartas.
+  * Transferencia Digital: Ventana emergente con datos de cuenta de ahorros 
+    Bancolombia y botón de copiado rápido.
+
+8. SISTEMA PRIVADO POR ENLACE UUID (RSVP)
+--------------------------------------------------------------------------------
+- Cada invitado cuenta con su propio enlace único (?id=UUID).
+- Solo quien tiene el enlace puede ver la invitación.
+- La confirmación de asistencia ya reconoce al invitado, le asigna sus pases 
+  máximos, registra preferencias de menú y notas personales para los novios.
+- Panel privado de los novios accesible con PIN 2027 para crear enlaces, 
+  enviar por WhatsApp y descargar reportes para banquete.
+
+================================================================================
+ESTADO DEL DESPLIEGUE:
+- Repositorio GitHub: https://github.com/raca2901/boda-camila-y-raul
+- Despliegue en Vivo: https://boda-camila-y-raul.vercel.app/
+================================================================================

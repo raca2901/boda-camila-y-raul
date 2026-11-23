@@ -11,6 +11,7 @@ import { Footer } from './components/Footer';
 import { AdminPanel } from './components/AdminPanel';
 import { MusicPlayer } from './components/MusicPlayer';
 import { PrivateGate } from './components/PrivateGate';
+import { WardrobeDoor } from './components/WardrobeDoor';
 import { INITIAL_GUESTS, INITIAL_WEDDING_CONFIG } from './data/initialGuests';
 import type { Guest, WeddingConfig } from './types/wedding';
 import {
@@ -30,6 +31,7 @@ export function App() {
   });
 
   const [currentGuest, setCurrentGuest] = useState<Guest | null>(null);
+  const [isWardrobeOpen, setIsWardrobeOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [isPlayingMusic, setIsPlayingMusic] = useState(false);
   const [gateError, setGateError] = useState<string | null>(null);
@@ -177,6 +179,7 @@ export function App() {
   // Exit guest mode (lock screen)
   const handleExitGuest = () => {
     setCurrentGuest(null);
+    setIsWardrobeOpen(false);
     sessionStorage.removeItem('wedding_current_guest_id');
     window.history.replaceState({}, '', window.location.pathname);
   };
@@ -184,8 +187,17 @@ export function App() {
   return (
     <div className="min-h-screen bg-[#FAF8F5] text-stone-800 font-sans selection:bg-amber-100 selection:text-amber-900">
       
-      {/* If no valid guest UUID provided, show Private Gate Screen */}
-      {!currentGuest ? (
+      {/* 🌲 PORTAL DE NARNIA: Siempre inicia con el Ropero */}
+      {!isWardrobeOpen && (
+        <WardrobeDoor
+          onOpenComplete={() => setIsWardrobeOpen(true)}
+          onStartMusic={() => setIsPlayingMusic(true)}
+          guest={currentGuest}
+        />
+      )}
+
+      {/* Una vez abierto el ropero: Si no tiene enlace UUID válido, muestra la pantalla de acceso privado */}
+      {isWardrobeOpen && !currentGuest && (
         <PrivateGate
           onUnlockWithCode={handleUnlockWithCode}
           sampleGuests={guests}
@@ -193,49 +205,52 @@ export function App() {
           onOpenAdmin={() => setIsAdminOpen(true)}
           errorMessage={gateError}
         />
-      ) : (
-        /* Full Private Wedding Invitation Unlocked for the Guest */
+      )}
+
+      {/* Una vez abierto el ropero: Si tiene enlace UUID válido, entra a la invitación completa */}
+      {isWardrobeOpen && currentGuest && (
         <>
-          {/* Navigation with personalized guest indicator */}
+          {/* Navegación con botón para volver al ropero y estado de música */}
           <Navbar
             onOpenAdmin={() => setIsAdminOpen(true)}
             isPlayingMusic={isPlayingMusic}
             onToggleMusic={() => setIsPlayingMusic(!isPlayingMusic)}
             currentGuest={currentGuest}
             onExitGuest={handleExitGuest}
+            onReopenWardrobe={() => setIsWardrobeOpen(false)}
           />
 
-          {/* Hero with VIP Guest Greeting, Countdown & Couple Portrait */}
+          {/* Hero con saludo VIP, Farol y Cuenta Regresiva */}
           <Hero
             weddingDate={config.weddingDate}
             guest={currentGuest}
           />
 
-          {/* Story (Conoce nuestra travesía) */}
+          {/* Historia: Conoce nuestra travesía */}
           <Story />
 
-          {/* Gallery of Moments & Video */}
+          {/* Galería de Recuerdos & Video de la Propuesta */}
           <Gallery />
 
-          {/* Event Details (Ceremony, Reception, Maps & Entrance Photo) */}
+          {/* Cuándo & Dónde: Horarios y Foto de la Entrada Principal */}
           <EventDetails config={config} />
 
-          {/* Dress Code & Palette */}
+          {/* Código de Vestimenta & Foto de Camila en Blanco */}
           <DressCode
             title={config.dressCodeTitle}
             description={config.dressCodeDescription}
           />
 
-          {/* Gifts & Bank details */}
+          {/* Lluvia de Sobres & Detalle para el Hogar */}
           <Gifts bankInfo={config.bankAccountInfo} />
 
-          {/* RSVP Module (Bound directly to current guest) */}
+          {/* Módulo de Confirmación de Asistencia (RSVP personalizado) */}
           <RsvpSection
             currentGuest={currentGuest}
             onUpdateGuest={handleUpdateGuest}
           />
 
-          {/* Footer */}
+          {/* Pie de Página */}
           <Footer
             brideName={config.brideName}
             groomName={config.groomName}
@@ -243,7 +258,7 @@ export function App() {
         </>
       )}
 
-      {/* Admin Panel Modal for Camila & Raúl (PIN: 2027) */}
+      {/* Panel de Administración de los Novios (PIN: 2027) */}
       <AdminPanel
         isOpen={isAdminOpen}
         onClose={() => setIsAdminOpen(false)}
@@ -253,7 +268,7 @@ export function App() {
         onRefreshFromDb={refreshGuests}
       />
 
-      {/* Narnia Song Audio Player con inicio automático */}
+      {/* Reproductor de la Melodía de Narnia (The Wardrobe) */}
       <MusicPlayer
         isPlaying={isPlayingMusic}
         onAutoPlayStarted={() => setIsPlayingMusic(true)}
