@@ -4,36 +4,32 @@ import { Compass, Waves, Sun, Flower2, HeartHandshake } from 'lucide-react';
 export const Story: React.FC = () => {
   const milestones = [
     {
-      title: 'Las Raíces de Camila',
+      tag: 'El Inicio de Cami',
       place: 'Los Palmitos, Sucre',
       icon: Sun,
       description:
-        'Entre campos cálidos, brisas sabaneras y su amor por la naturaleza y las flores, creció Camila, con un corazón lleno de sueños y alegría.',
-      tag: 'El Inicio de Ella',
+        'En medio de poemas, libros y flores creció Camila, y vivió los primeros 16 años de su vida en su pueblo natal, llena de sueños y fe.',
     },
     {
-      title: 'El Origen de Él',
+      tag: 'El Inicio de Rau',
       place: 'Cartagena de Indias',
       icon: Waves,
       description:
-        'Cuna de historia, mar y atardeceres dorados frente al Caribe. Desde allí comenzó el viaje de una vida que estaba destinada a coincidir.',
-      tag: 'El Inicio de Él',
+        'En la ciudad amurallada, llena de historias y atardeceres dorados nació Raúl, y ahí vivió los primeros 4 años de su vida.',
     },
     {
-      title: 'El Encuentro en Medellín',
+      tag: 'El Encuentro',
       place: 'Medellín, Antioquia',
       icon: Flower2,
       description:
-        'En la ciudad de la eterna primavera y los jardines en flor, dos caminos lejanos se cruzaron. Aquí construyeron su hogar, su complicidad y su amor.',
-      tag: 'Nuestro Hogar',
+        'Y finalmente los caminos de Cami y Rau se juntaron en la ciudad de la eterna primavera, se conocieron hace 10 años, y lo que comenzó como una genuina amistad, hoy florece en los campos del amor.',
     },
     {
-      title: 'La Promesa Eterna',
+      tag: 'El Sí, Acepto',
       place: '31 de Enero de 2027',
       icon: HeartHandshake,
       description:
-        'Como quien cruza el ropero hacia Narnia, decidimos dar el paso hacia nuestra mayor aventura: prometernos amor para toda la vida ante Dios y nuestros seres amados.',
-      tag: 'El Sí, Acepto',
+        'Y como si cruzáramos el ropero hacia el mundo Narniano que Cami tanto ama, hemos programado el 31 de enero como el día para unir nuestras vidas delante de Dios y de nuestros seres amados.',
     },
   ];
 
@@ -46,14 +42,11 @@ export const Story: React.FC = () => {
           <Compass className="w-5 h-5 text-amber-700" />
           <span className="h-[1px] w-12 bg-amber-800/20" />
         </div>
-        <p className="text-xs uppercase tracking-[0.25em] text-stone-500 font-cinzel">
-          Nuestra Travesía
-        </p>
-        <h2 className="font-serif-title text-3xl sm:text-5xl font-normal text-emerald-950 mt-1">
-          De la Costa y la Sabana a la Ciudad de las Flores
+        <h2 className="font-serif-title text-3xl sm:text-5xl font-normal text-emerald-950">
+          Conoce Nuestra Travesía
         </h2>
-        <p className="text-sm sm:text-base text-stone-600 max-w-xl mx-auto mt-4 font-light leading-relaxed">
-          Dos almas nacidas en tierras distintas que encontraron su propio hogar en Medellín, y ahora sellan su historia en una sola promesa.
+        <p className="text-sm sm:text-lg text-stone-600 max-w-xl mx-auto mt-3 font-serif-title italic">
+          "Nacimos en la calidez de la costa y nos encontramos en la ciudad primaveral."
         </p>
       </div>
 
@@ -63,7 +56,7 @@ export const Story: React.FC = () => {
           const Icon = item.icon;
           return (
             <div
-              key={item.title}
+              key={item.tag}
               className="group relative bg-white/80 backdrop-blur-sm p-6 sm:p-8 rounded-3xl border border-amber-900/10 shadow-sm hover:shadow-md hover:border-amber-700/30 transition-all duration-300 flex flex-col justify-between"
             >
               {/* Subtle number watermark */}
@@ -73,11 +66,11 @@ export const Story: React.FC = () => {
 
               <div>
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-2xl bg-amber-100/70 text-amber-800 flex items-center justify-center group-hover:bg-emerald-900 group-hover:text-amber-50 transition-colors">
+                  <div className="w-10 h-10 rounded-2xl bg-amber-100/70 text-amber-800 flex items-center justify-center group-hover:bg-emerald-900 group-hover:text-amber-50 transition-colors shadow-xs">
                     <Icon className="w-5 h-5" />
                   </div>
                   <div>
-                    <span className="text-[10px] font-cinzel uppercase tracking-widest text-emerald-900/70 block">
+                    <span className="text-[11px] font-cinzel uppercase tracking-widest text-emerald-900/80 block font-semibold">
                       {item.tag}
                     </span>
                     <h3 className="font-serif-title text-xl sm:text-2xl font-medium text-emerald-950">
@@ -92,7 +85,7 @@ export const Story: React.FC = () => {
               </div>
 
               <div className="pt-6 mt-4 border-t border-amber-900/5 flex items-center justify-between text-xs text-stone-400 font-cinzel">
-                <span>Capítulo {index + 1}</span>
+                <span>Capítulo 0{index + 1}</span>
                 <span className="text-amber-700">✦</span>
               </div>
             </div>

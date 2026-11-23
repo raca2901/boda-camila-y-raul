@@ -59,12 +59,12 @@ export const PrivateGate: React.FC<PrivateGateProps> = ({
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full border border-amber-800/20 bg-white/80 backdrop-blur-sm flex items-center justify-center shadow-xs">
             <span className="font-serif-title font-semibold text-emerald-950 text-sm tracking-widest">
-              C&R
+              R&C
             </span>
           </div>
           <div>
             <span className="font-cinzel text-xs uppercase tracking-widest text-emerald-950 block font-semibold">
-              Camila & Raúl
+              Raúl Ernesto & María Camila
             </span>
             <span className="text-[10px] text-stone-400 font-light block">
               31 de Enero de 2027
@@ -103,7 +103,7 @@ export const PrivateGate: React.FC<PrivateGateProps> = ({
               <span>Invitación Exclusiva & Privada</span>
             </div>
             <h1 className="font-serif-title text-3xl sm:text-4xl font-normal text-emerald-950 leading-tight">
-              Boda de Camila & Raúl
+              Boda de Raúl Ernesto & María Camila
             </h1>
             <p className="text-xs sm:text-sm text-stone-500 font-light max-w-md mx-auto leading-relaxed pt-1">
               Esta celebración es íntima y privada. Para acceder a los detalles del evento y confirmar tu asistencia, ingresa con tu enlace personal con código UUID o introdúcelo a continuación.
@@ -188,7 +188,7 @@ export const PrivateGate: React.FC<PrivateGateProps> = ({
 
       {/* Footer */}
       <footer className="relative z-10 w-full py-6 text-center text-xs text-stone-400 font-light">
-        Camila & Raúl · 31 de Enero de 2027 · Copacabana, Antioquia
+        Raúl Ernesto & María Camila · 31 de Enero de 2027 · Copacabana, Antioquia
       </footer>
 
     </div>

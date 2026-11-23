@@ -6,33 +6,33 @@ export const Gallery: React.FC = () => {
 
   const galleryItems = [
     {
-      src: '/media/foto-3.jpeg',
-      title: 'Nuestro Amor en Guatapé',
-      subtitle: 'Entre montañas y el embalse',
+      src: '/media/foto-4.jpeg',
+      title: 'Abrazo Inolvidable',
+      subtitle: 'Piedra del Peñol',
       aspect: 'aspect-3/4',
     },
     {
-      src: '/media/foto-5.jpeg',
+      src: '/media/foto-2.jpeg',
+      title: 'Frente al Embalse',
+      subtitle: 'Mirando hacia nuestro futuro',
+      aspect: 'aspect-3/4',
+    },
+    {
+      src: '/media/foto-1.jpeg',
+      title: 'Caminando Juntos',
+      subtitle: 'Creando recuerdos para siempre',
+      aspect: 'aspect-3/4',
+    },
+    {
+      src: '/media/foto-3.jpeg',
       title: 'Cómplices de Vida',
       subtitle: 'Miradas que dicen todo',
       aspect: 'aspect-3/4',
     },
     {
-      src: '/media/foto-4.jpeg',
-      title: 'Sonrisas Inolvidables',
-      subtitle: 'Piedra del Peñol, Antioquia',
-      aspect: 'aspect-3/4',
-    },
-    {
-      src: '/media/foto-1.jpeg',
-      title: 'Juntos en el Camino',
-      subtitle: 'Creando recuerdos para siempre',
-      aspect: 'aspect-3/4',
-    },
-    {
-      src: '/media/foto-2.jpeg',
-      title: 'Mirando al Futuro',
-      subtitle: 'El inicio de nuestra mayor aventura',
+      src: '/media/foto-5.jpeg',
+      title: 'Amor en Cada Instante',
+      subtitle: 'Camila & Raúl',
       aspect: 'aspect-3/4',
     },
   ];
@@ -41,17 +41,17 @@ export const Gallery: React.FC = () => {
     <section id="galeria" className="py-20 px-4 bg-[#FAF8F5] relative overflow-hidden">
       <div className="max-w-5xl mx-auto">
         
-        {/* Header */}
+        {/* Header con el texto exacto pedido por Camila */}
         <div className="text-center mb-16">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-100/80 text-amber-900 text-xs font-cinzel uppercase tracking-widest mb-3">
             <Camera className="w-3.5 h-3.5 text-amber-700" />
             <span>Nuestros Recuerdos</span>
           </div>
-          <h2 className="font-serif-title text-3xl sm:text-5xl font-normal text-emerald-950">
-            Momentos que Guardamos en el Corazón
+          <h2 className="font-serif-title text-3xl sm:text-4xl md:text-5xl font-normal text-emerald-950 max-w-3xl mx-auto leading-tight">
+            Amamos hacernos fotos y videos y queremos compartir algunos de ellos contigo
           </h2>
-          <p className="text-stone-600 text-sm sm:text-base max-w-lg mx-auto mt-3 font-light">
-            Algunos de los instantes mágicos que hemos vivido juntos en los paisajes de Antioquia.
+          <p className="text-stone-600 text-sm sm:text-base max-w-xl mx-auto mt-4 font-light">
+            Guardamos muchos recuerdos de lugares, en la tierra que nos acogió: <strong>Antioquia</strong>.
           </p>
         </div>
 
@@ -82,7 +82,7 @@ export const Gallery: React.FC = () => {
           ))}
         </div>
 
-        {/* Video Highlight Card */}
+        {/* Video Especial */}
         <div className="bg-white rounded-3xl p-6 sm:p-8 border border-amber-900/10 shadow-md">
           <div className="flex flex-col md:flex-row items-center gap-6">
             <div className="w-full md:w-1/2 rounded-2xl overflow-hidden shadow-md bg-stone-900 aspect-video relative group">
@@ -91,7 +91,7 @@ export const Gallery: React.FC = () => {
                 controls
                 playsInline
                 className="w-full h-full object-cover"
-                poster="/media/foto-3.jpeg"
+                poster="/media/foto-2.jpeg"
               />
             </div>
             <div className="w-full md:w-1/2 space-y-3 text-center md:text-left">
@@ -99,11 +99,11 @@ export const Gallery: React.FC = () => {
                 <Sparkles className="w-3.5 h-3.5 text-amber-600" />
                 <span>Video Especial</span>
               </div>
-              <h3 className="font-serif-title text-2xl sm:text-3xl font-normal text-emerald-950">
-                Un Instante Inmortalizado
+              <h3 className="font-serif-title text-2xl sm:text-3xl font-normal text-emerald-950 leading-snug">
+                Ese fue el lugar donde Rau le pidió a Cami que fuera su esposa
               </h3>
               <p className="text-xs sm:text-sm text-stone-600 font-light leading-relaxed">
-                Cada paso que hemos dado nos ha traído hasta este momento soñado. Gracias por ser parte de nuestra historia de amor.
+                Un instante inolvidable en nuestras vidas, el inicio del camino hacia el altar y el comienzo de nuestra mayor aventura.
               </p>
             </div>
           </div>

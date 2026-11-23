@@ -1,36 +1,40 @@
 import { Countdown } from './Countdown';
-import { Sparkles, Calendar, MapPin, ChevronDown, Heart, Users } from 'lucide-react';
+import { ChevronDown, Heart, Users } from 'lucide-react';
 import type { Guest } from '../types/wedding';
 
 interface HeroProps {
-  brideName: string;
-  groomName: string;
   weddingDate: string;
   guest?: Guest;
 }
 
 export const Hero: React.FC<HeroProps> = ({
-  brideName,
-  groomName,
   weddingDate,
   guest,
 }) => {
   return (
     <section
       id="inicio"
-      className="relative min-h-[95vh] flex flex-col items-center justify-center pt-24 pb-16 px-4 text-center overflow-hidden bg-gradient-to-b from-[#F5F2EB] via-[#FAF8F5] to-[#F5F2EB]"
+      className="relative min-h-[92vh] flex flex-col items-center justify-center pt-24 pb-16 px-4 text-center overflow-hidden bg-[#FAF8F5]"
     >
-      {/* Delicate botanical & magical ambient background elements */}
-      <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-gradient-to-tr from-amber-200/20 via-emerald-100/30 to-amber-100/10 rounded-full blur-3xl pointer-events-none" />
+      {/* Nuevo Fondo Romántico & Narniano con aura mágica */}
+      <div className="absolute inset-0 pointer-events-none">
+        {/* Resplandores etéreos */}
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-gradient-to-tr from-amber-200/25 via-emerald-100/35 to-rose-100/25 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute top-10 left-10 w-80 h-80 bg-[#84b6f4]/15 rounded-full blur-3xl" />
+        <div className="absolute bottom-10 right-10 w-96 h-96 bg-[#f99aaa]/15 rounded-full blur-3xl" />
+        
+        {/* Patrón sutil botánico de fondo */}
+        <div className="absolute inset-0 opacity-[0.03] bg-[radial-gradient(#064e3b_1px,transparent_1px)] [background-size:24px_24px]" />
+      </div>
 
-      {/* VIP Guest Greeting Pill if guest is present */}
+      {/* Distintivo de Invitado VIP si está presente */}
       {guest && (
-        <div className="mb-4 inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/95 border border-amber-300 shadow-sm text-xs font-cinzel text-emerald-950 animate-in fade-in slide-in-from-top-2 duration-300">
+        <div className="mb-4 inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/95 border border-amber-300 shadow-sm text-xs font-cinzel text-emerald-950 relative z-10 animate-in fade-in slide-in-from-top-2 duration-300">
           <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500" />
           <span>
             Invitación Exclusiva para: <strong>{guest.name}</strong>
           </span>
-          <span className="text-stone-400">|</span>
+          <span className="text-stone-300">|</span>
           <span className="text-amber-800 font-semibold inline-flex items-center gap-1">
             <Users className="w-3 h-3" />
             {guest.passes} {guest.passes === 1 ? 'pase' : 'pases'}
@@ -38,15 +42,15 @@ export const Hero: React.FC<HeroProps> = ({
         </div>
       )}
 
-      {/* Narnia Lantern Svg Icon with glowing aura */}
-      <div className="relative mb-3 group cursor-default">
-        <div className="w-14 h-14 sm:w-16 sm:h-16 mx-auto flex items-center justify-center relative">
-          <div className="absolute inset-0 bg-amber-400/30 rounded-full blur-xl lantern-glow" />
+      {/* Farol Narniano y Mensaje del Umbral */}
+      <div className="relative mb-4 group cursor-default z-10 max-w-xl mx-auto">
+        <div className="w-14 h-14 sm:w-16 sm:h-16 mx-auto flex items-center justify-center relative mb-2">
+          <div className="absolute inset-0 bg-amber-400/35 rounded-full blur-xl lantern-glow" />
           
-          {/* Custom Stylized Victorian Lantern SVG */}
+          {/* Farol victoriano estilizado */}
           <svg
             viewBox="0 0 64 64"
-            className="w-10 h-10 sm:w-14 sm:h-14 text-amber-800 drop-shadow-md relative z-10"
+            className="w-10 h-10 sm:w-12 sm:h-12 text-amber-800 drop-shadow-md relative z-10"
             fill="none"
             stroke="currentColor"
             strokeWidth="1.8"
@@ -65,87 +69,62 @@ export const Hero: React.FC<HeroProps> = ({
             <path d="M29 53 Q32 50 35 53 Q33 57 30 55" stroke="#059669" strokeWidth="1.2" fill="none" />
           </svg>
         </div>
-        <p className="text-[10px] font-cinzel uppercase tracking-[0.25em] text-emerald-900/70 mt-1">
-          « El Umbral hacia una Nueva Historia »
+        
+        {/* Texto exacto pedido por Camila */}
+        <p className="text-xs sm:text-sm font-cinzel text-emerald-950/80 px-4 leading-relaxed tracking-wider">
+          Acompáñanos en la gran aventura de abrir las puertas hacia un nuevo capítulo de nuestra historia
         </p>
       </div>
 
-      {/* Main Couple Names */}
-      <div className="max-w-3xl mx-auto space-y-1 mb-4">
-        <p className="text-xs sm:text-sm uppercase tracking-[0.3em] text-stone-500 font-cinzel">
-          Nos Casamos
+      {/* Nombres Principales de los Novios */}
+      <div className="max-w-3xl mx-auto space-y-2 mb-6 z-10">
+        <p className="text-xs uppercase tracking-[0.3em] text-stone-500 font-cinzel">
+          Nuestra Boda
         </p>
-        <h1 className="font-serif-title text-5xl sm:text-7xl md:text-8xl font-light text-emerald-950 tracking-tight leading-none">
-          {brideName}
+        <h1 className="font-serif-title text-4xl sm:text-6xl md:text-7xl font-light text-emerald-950 tracking-tight leading-tight">
+          Raúl Ernesto
           <span className="block sm:inline font-script text-amber-700 text-4xl sm:text-6xl md:text-7xl mx-2 sm:mx-4 font-normal">
             &
           </span>
-          {groomName}
+          María Camila
         </h1>
-        <p className="text-sm sm:text-lg font-serif-title italic text-stone-600 max-w-xl mx-auto pt-1">
+        <p className="text-xs sm:text-base font-serif-title italic text-stone-600 max-w-lg mx-auto pt-1 font-light">
           "A veces, abrir una puerta es el inicio de la mayor aventura de todas."
         </p>
       </div>
 
-      {/* Couple Portrait Photo */}
-      <div className="relative mb-6 group">
-        <div className="w-36 h-48 sm:w-44 sm:h-56 mx-auto rounded-full overflow-hidden shadow-xl border-4 border-white ring-2 ring-amber-700/20 relative group-hover:scale-105 transition-transform duration-500">
-          <img
-            src="/media/foto-3.jpeg"
-            alt={`${brideName} & ${groomName}`}
-            className="w-full h-full object-cover object-top"
-          />
-        </div>
-        <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-sm px-3 py-0.5 rounded-full border border-amber-900/10 text-[10px] font-cinzel text-emerald-900 shadow-sm">
-          Guatapé, Antioquia
-        </div>
-      </div>
-
-      {/* Key Details Badge */}
-      <div className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-4 text-xs sm:text-sm font-medium text-stone-700 mb-6 font-cinzel">
-        <div className="flex items-center gap-2 px-4 py-2 bg-white/80 rounded-full border border-amber-900/10 shadow-sm">
-          <Calendar className="w-4 h-4 text-amber-700" />
-          <span>Domingo, 31 de Enero de 2027</span>
-        </div>
-        <div className="flex items-center gap-2 px-4 py-2 bg-white/80 rounded-full border border-amber-900/10 shadow-sm">
-          <Sparkles className="w-4 h-4 text-amber-700" />
-          <span>5:00 P.M.</span>
-        </div>
-        <div className="flex items-center gap-2 px-4 py-2 bg-white/80 rounded-full border border-amber-900/10 shadow-sm">
-          <MapPin className="w-4 h-4 text-emerald-800" />
-          <span>Copacabana · Medellín</span>
+      {/* Foto Inicial de la Pareja con Nuevo Marco Narniano */}
+      <div className="relative mb-8 z-10 group">
+        <div className="relative w-48 h-60 sm:w-56 sm:h-72 mx-auto rounded-3xl p-1.5 bg-gradient-to-tr from-amber-300 via-emerald-800 to-amber-200 shadow-2xl transition-transform duration-500 group-hover:scale-[1.02]">
+          <div className="w-full h-full rounded-[22px] overflow-hidden bg-stone-100 relative">
+            <img
+              src="/media/foto-5.jpeg"
+              alt="Raúl Ernesto & María Camila"
+              className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700"
+            />
+          </div>
         </div>
       </div>
 
-      {/* Countdown Timer */}
-      <div className="w-full mb-8">
+      {/* Cuenta Regresiva */}
+      <div className="w-full max-w-xl mx-auto mb-8 z-10">
         <Countdown targetDate={weddingDate} />
       </div>
 
-      {/* Call to Action Buttons */}
-      <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
+      {/* Indicador de Desplazamiento */}
+      <div className="z-10 flex flex-col items-center gap-1 text-stone-500 hover:text-emerald-950 transition-colors pt-2">
+        <span className="text-[11px] font-cinzel uppercase tracking-widest text-stone-400">
+          Conoce nuestra travesía
+        </span>
         <a
-          href="#rsvp"
-          className="w-full sm:w-auto px-8 py-3.5 bg-emerald-900 hover:bg-emerald-800 text-amber-50 font-cinzel text-xs sm:text-sm tracking-widest uppercase rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5"
+          href="#historia"
+          className="p-1 animate-bounce text-amber-800"
+          aria-label="Desplazar hacia la historia"
         >
-          Confirmar Mi Asistencia
-        </a>
-        <a
-          href="#evento"
-          className="w-full sm:w-auto px-7 py-3.5 bg-white/80 hover:bg-white text-stone-800 font-cinzel text-xs sm:text-sm tracking-widest uppercase rounded-full border border-amber-900/15 shadow-sm hover:shadow transition-all duration-300"
-        >
-          Ver Itinerario & Mapa
+          <ChevronDown className="w-5 h-5" />
         </a>
       </div>
 
-      {/* Scroll indicator */}
-      <a
-        href="#historia"
-        className="mt-10 text-stone-400 hover:text-emerald-900 transition-colors animate-bounce p-2"
-        aria-label="Desplazar hacia abajo"
-      >
-        <ChevronDown className="w-5 h-5" />
-      </a>
     </section>
   );
 };

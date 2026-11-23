@@ -15,7 +15,7 @@ export const Footer: React.FC<FooterProps> = ({ brideName, groomName }) => {
         
         {/* Monogram */}
         <div className="font-serif-title text-4xl sm:text-5xl font-light tracking-widest text-amber-100">
-          {brideName} <span className="font-script text-amber-400 text-5xl sm:text-6xl">&</span> {groomName}
+          {groomName} <span className="font-script text-amber-400 text-5xl sm:text-6xl">&</span> {brideName}
         </div>
 
         <p className="text-xs sm:text-sm font-cinzel uppercase tracking-[0.3em] text-amber-200/70">
@@ -25,7 +25,7 @@ export const Footer: React.FC<FooterProps> = ({ brideName, groomName }) => {
         <div className="w-16 h-[1px] bg-amber-400/30 mx-auto" />
 
         <p className="font-serif-title italic text-base sm:text-lg text-amber-100/90 max-w-lg mx-auto font-light leading-relaxed">
-          "Un día nos encontramos en la ciudad de las flores, y decidimos caminar juntos por siempre."
+          "A veces, abrir una puerta es el inicio de la mayor aventura de todas."
         </p>
 
         <div className="pt-6 text-[11px] text-amber-200/40 font-cinzel flex items-center justify-center gap-1.5">

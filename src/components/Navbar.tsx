@@ -21,11 +21,11 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const navLinks = [
     { label: 'Inicio', href: '#inicio' },
-    { label: 'Nuestra Historia', href: '#historia' },
+    { label: 'Nuestra Travesía', href: '#historia' },
     { label: 'Recuerdos', href: '#galeria' },
     { label: 'Cuándo & Dónde', href: '#evento' },
     { label: 'Vestimenta', href: '#vestimenta' },
-    { label: 'Regalos', href: '#regalos' },
+    { label: 'Lluvia de Sobres', href: '#regalos' },
     { label: 'Confirmar Asistencia', href: '#rsvp', isCta: true },
   ];
 
@@ -33,10 +33,10 @@ export const Navbar: React.FC<NavbarProps> = ({
     <nav className="fixed top-0 left-0 right-0 z-50 bg-[#FAF8F5]/90 backdrop-blur-md border-b border-amber-900/10 transition-all duration-300">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between">
         
-        {/* Monogram / Brand (Camila & Raúl) */}
+        {/* Monogram / Brand (Raúl Ernesto & María Camila) */}
         <a href="#inicio" className="flex items-center gap-2 group">
           <span className="font-serif-title text-2xl sm:text-3xl font-normal tracking-widest text-emerald-950 group-hover:text-amber-800 transition-colors">
-            C <span className="font-script text-amber-700 text-3xl font-light">&</span> R
+            R <span className="font-script text-amber-700 text-3xl font-light">&</span> C
           </span>
           <span className="hidden sm:inline-block text-xs uppercase tracking-widest text-emerald-900/60 pl-2 border-l border-emerald-900/20 font-cinzel">
             31 · 01 · 2027
@@ -66,7 +66,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Music Control Pill - Narnia */}
           <button
             onClick={onToggleMusic}
-            title={isPlayingMusic ? 'Pausar música de Narnia' : 'Reproducir música de Narnia'}
+            title={isPlayingMusic ? 'Pausar melodía de Narnia' : 'Reproducir melodía de Narnia'}
             className="flex items-center gap-1.5 bg-amber-50/90 border border-amber-200/90 rounded-full px-3 py-1 text-xs text-amber-900 hover:bg-amber-100 transition-all shadow-sm"
           >
             {isPlayingMusic ? (
@@ -86,7 +86,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           {currentGuest && onExitGuest && (
             <button
               onClick={onExitGuest}
-              title="Salir de esta invitación privada"
+              title="Cerrar sesión de esta invitación privada"
               className="hidden lg:flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] text-stone-500 hover:text-rose-700 hover:bg-rose-50 border border-stone-200 transition-all font-cinzel"
             >
               <LogOut className="w-3 h-3" />

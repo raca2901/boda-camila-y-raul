@@ -1,19 +1,19 @@
 import type { Guest, WeddingConfig } from '../types/wedding';
 
 export const INITIAL_WEDDING_CONFIG: WeddingConfig = {
-  brideName: 'Camila',
-  groomName: 'Raúl',
+  brideName: 'María Camila',
+  groomName: 'Raúl Ernesto',
   weddingDate: '2027-01-31T17:00:00-05:00', // 31 de Enero de 2027 a las 5:00 PM
   ceremonyTime: '5:00 PM',
-  receptionTime: '7:00 PM',
-  ceremonyVenue: 'Finca Campestre (Ceremonia y Celebración)',
+  receptionTime: 'Hasta la madrugada',
+  ceremonyVenue: 'Sede Campestre (Ceremonia y Celebración)',
   ceremonyAddress: 'Vereda El Noral, Copacabana, Antioquia (Área Metropolitana de Medellín)',
   ceremonyMapsUrl: "https://www.google.com/maps/place/6%C2%B021'59.7%22N+75%C2%B030'12.3%22W/@6.3665924,-75.5059852,17z/data=!3m1!4b1!4m4!3m3!8m2!3d6.3665924!4d-75.5034103",
   receptionVenue: 'Jardines & Salón Campestre',
   receptionAddress: 'Vereda El Noral, Copacabana, Antioquia',
   receptionMapsUrl: "https://www.google.com/maps/place/6%C2%B021'59.7%22N+75%C2%B030'12.3%22W/@6.3665924,-75.5059852,17z/data=!3m1!4b1!4m4!3m3!8m2!3d6.3665924!4d-75.5034103",
-  dressCodeTitle: 'Formal Elegante',
-  dressCodeDescription: 'Los invitamos a vestir de gala. Recomendamos tonos inspirados en el bosque: verde olivo, champagne, terracota suave y azul noche. Nos reservamos el blanco marfil para la novia.',
+  dressCodeTitle: 'Tu Esencia & Comodidad',
+  dressCodeDescription: 'Queremos que ese día puedas lucir con tu esencia, y disfrutes de la comodidad de ser tú.',
   bankAccountInfo: {
     bankName: 'Bancolombia',
     accountType: 'Ahorros',

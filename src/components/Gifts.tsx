@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Gift, Mail, Copy, Check, Heart } from 'lucide-react';
+import { Mail, Copy, Check, Heart, Sparkles } from 'lucide-react';
 import type { WeddingConfig } from '../types/wedding';
 
 interface GiftsProps {
@@ -21,19 +21,21 @@ export const Gifts: React.FC<GiftsProps> = ({ bankInfo }) => {
       <div className="max-w-4xl mx-auto text-center">
         
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-100/80 text-amber-900 text-xs font-cinzel uppercase tracking-widest mb-3">
-          <Gift className="w-3.5 h-3.5" />
-          <span>Mesa de Regalos</span>
+          <Heart className="w-3.5 h-3.5 text-amber-700" />
+          <span>Lluvia de Sobres</span>
         </div>
 
-        <h2 className="font-serif-title text-3xl sm:text-5xl font-normal text-emerald-950 mb-3">
-          El Mejor Regalo es tu Presencia
+        {/* Título exacto solicitado por Camila */}
+        <h2 className="font-serif-title text-3xl sm:text-5xl font-normal text-emerald-950 mb-3 max-w-2xl mx-auto leading-tight">
+          Tu compañía y buenos deseos son nuestro mejor regalo
         </h2>
         
+        {/* Subtítulo exacto solicitado por Camila */}
         <p className="text-stone-600 text-sm sm:text-base max-w-xl mx-auto font-light leading-relaxed mb-10">
-          Su compañía y buenos deseos son nuestro mayor tesoro. Si además desean tener un detalle con nosotros para dar inicio a nuestro nuevo hogar:
+          Si además deseas tener un detalle con nosotros para dar inicio a nuestro nuevo hogar:
         </p>
 
-        {/* Gift Options Cards */}
+        {/* Gift Options Cards (Sin mención de regalos físicos) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl mx-auto">
           
           {/* Lluvia de sobres */}
@@ -46,12 +48,12 @@ export const Gifts: React.FC<GiftsProps> = ({ bankInfo }) => {
                 Lluvia de Sobres
               </h3>
               <p className="text-xs text-stone-600 font-light leading-relaxed">
-                Dispondremos de un cofre especial en la recepción para recibir sus sobres y cartas con dedicatorias de amor.
+                Dispondremos de un cofre especial en la recepción para recibir sus sobres y cartas con dedicatorias de amor y bendiciones.
               </p>
             </div>
             <div className="mt-6 inline-flex items-center gap-1.5 text-xs font-cinzel text-amber-800">
-              <Heart className="w-3.5 h-3.5 fill-amber-700 text-amber-700" />
-              <span>Cofre en el evento</span>
+              <Sparkles className="w-3.5 h-3.5 text-amber-700" />
+              <span>Cofre en la recepción</span>
             </div>
           </div>
 
@@ -59,13 +61,13 @@ export const Gifts: React.FC<GiftsProps> = ({ bankInfo }) => {
           <div className="bg-white/90 backdrop-blur-sm p-6 sm:p-8 rounded-3xl border border-amber-900/10 shadow-sm flex flex-col justify-between items-center text-center">
             <div>
               <div className="w-14 h-14 rounded-full bg-emerald-100/70 text-emerald-900 flex items-center justify-center mx-auto mb-4">
-                <Gift className="w-6 h-6" />
+                <Heart className="w-6 h-6 text-emerald-800" />
               </div>
               <h3 className="font-serif-title text-2xl font-normal text-emerald-950 mb-2">
-                Transferencia Bancaria
+                Transferencia Digital
               </h3>
               <p className="text-xs text-stone-600 font-light leading-relaxed">
-                Si prefieren hacernos llegar su detalle de forma digital, ponemos a disposición nuestra cuenta bancaria.
+                Si prefieres hacernos llegar tu detalle de manera digital para nuestro nuevo hogar, ponemos a disposición nuestra cuenta de ahorros.
               </p>
             </div>
             <button
@@ -86,7 +88,7 @@ export const Gifts: React.FC<GiftsProps> = ({ bankInfo }) => {
                 Datos de Transferencia
               </h3>
               <p className="text-xs text-stone-500 font-light mb-6">
-                Agradecemos de corazón su cariño y apoyo para nuestro futuro.
+                Agradecemos de corazón tu cariño y apoyo para el inicio de nuestro nuevo hogar.
               </p>
 
               <div className="space-y-3.5 bg-stone-50 p-4 rounded-2xl border border-stone-200 text-sm">
@@ -125,7 +127,7 @@ export const Gifts: React.FC<GiftsProps> = ({ bankInfo }) => {
                 </div>
                 <div>
                   <span className="text-[11px] font-cinzel text-stone-400 block uppercase">Titular</span>
-                  <span className="font-medium text-stone-800">{bankInfo.holderName}</span>
+                  <span className="font-medium text-stone-800">Raúl Ernesto & María Camila</span>
                 </div>
                 <div>
                   <span className="text-[11px] font-cinzel text-stone-400 block uppercase">Identificación</span>

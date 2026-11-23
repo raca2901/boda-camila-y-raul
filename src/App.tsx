@@ -156,6 +156,7 @@ export function App() {
 
     if (found) {
       setCurrentGuest(found);
+      setIsPlayingMusic(true);
       sessionStorage.setItem('wedding_current_guest_id', found.id);
       window.history.replaceState({}, '', `?id=${encodeURIComponent(found.id)}`);
       setGateError(null);
@@ -167,6 +168,7 @@ export function App() {
   // Select demo sample guest
   const handleSelectSampleGuest = (guest: Guest) => {
     setCurrentGuest(guest);
+    setIsPlayingMusic(true);
     sessionStorage.setItem('wedding_current_guest_id', guest.id);
     window.history.replaceState({}, '', `?id=${encodeURIComponent(guest.id)}`);
     setGateError(null);
@@ -205,19 +207,17 @@ export function App() {
 
           {/* Hero with VIP Guest Greeting, Countdown & Couple Portrait */}
           <Hero
-            brideName={config.brideName}
-            groomName={config.groomName}
             weddingDate={config.weddingDate}
             guest={currentGuest}
           />
 
-          {/* Story (Los Palmitos, Cartagena, Medellín) */}
+          {/* Story (Conoce nuestra travesía) */}
           <Story />
 
           {/* Gallery of Moments & Video */}
           <Gallery />
 
-          {/* Event Details (Ceremony, Reception, Maps & Photo) */}
+          {/* Event Details (Ceremony, Reception, Maps & Entrance Photo) */}
           <EventDetails config={config} />
 
           {/* Dress Code & Palette */}
@@ -253,8 +253,11 @@ export function App() {
         onRefreshFromDb={refreshGuests}
       />
 
-      {/* Narnia Song Audio Player */}
-      <MusicPlayer isPlaying={isPlayingMusic} />
+      {/* Narnia Song Audio Player con inicio automático */}
+      <MusicPlayer
+        isPlaying={isPlayingMusic}
+        onAutoPlayStarted={() => setIsPlayingMusic(true)}
+      />
 
     </div>
   );
