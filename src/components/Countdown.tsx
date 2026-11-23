@@ -45,17 +45,23 @@ export const Countdown: React.FC<CountdownProps> = ({ targetDate }) => {
   ];
 
   return (
-    <div className="w-full max-w-xl mx-auto px-4 py-6">
+    <div className="w-full max-w-xl mx-auto px-2 sm:px-4 py-4">
       <div className="grid grid-cols-4 gap-2 sm:gap-4">
         {units.map((unit) => (
           <div
             key={unit.label}
-            className="flex flex-col items-center justify-center p-3 sm:p-5 bg-white/70 backdrop-blur-sm rounded-2xl border border-amber-900/10 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:border-amber-700/30 transition-all duration-300"
+            className="relative flex flex-col items-center justify-center p-3 sm:p-5 bg-[#091c18]/80 backdrop-blur-md rounded-xl border border-amber-400/35 shadow-[0_10px_30px_rgba(0,0,0,0.45)] hover:border-amber-300/70 transition-all duration-300"
           >
-            <span className="font-serif-title text-2xl sm:text-4xl md:text-5xl font-light text-emerald-950 tracking-tight">
+            {/* Tiny gilded corner dots */}
+            <span className="absolute top-1.5 left-1.5 w-1 h-1 rounded-full bg-amber-400/60" />
+            <span className="absolute top-1.5 right-1.5 w-1 h-1 rounded-full bg-amber-400/60" />
+            <span className="absolute bottom-1.5 left-1.5 w-1 h-1 rounded-full bg-amber-400/60" />
+            <span className="absolute bottom-1.5 right-1.5 w-1 h-1 rounded-full bg-amber-400/60" />
+
+            <span className="font-cinzel text-2xl sm:text-4xl md:text-5xl font-medium text-gold-foil tracking-tight">
               {String(unit.value).padStart(2, '0')}
             </span>
-            <span className="text-[10px] sm:text-xs uppercase tracking-widest text-stone-500 font-cinzel mt-1">
+            <span className="text-[9px] sm:text-[11px] uppercase tracking-[0.2em] text-amber-200/75 font-cinzel mt-1.5">
               {unit.label}
             </span>
           </div>

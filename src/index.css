@@ -14,33 +14,91 @@
   font-family: 'Cinzel', serif;
 }
 
+.font-cinzel-decorative {
+  font-family: 'Cinzel Decorative', 'Cinzel', serif;
+}
+
 .font-script {
   font-family: 'Great Vibes', cursive;
 }
 
-/* Custom delicate scrollbar */
+/* Custom royal scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 7px;
 }
 ::-webkit-scrollbar-track {
-  background: #FAF8F5;
+  background: #071411;
 }
 ::-webkit-scrollbar-thumb {
-  background: #d4cfc5;
-  border-radius: 3px;
+  background: linear-gradient(180deg, #b8860b, #7a5812);
+  border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #b8b0a2;
+  background: #d4af37;
+}
+
+/* Narnia Parchment Surface */
+.narnia-parchment {
+  background-color: #f3ebd8;
+  background-image:
+    radial-gradient(ellipse at 20% 0%, rgba(255, 250, 235, 0.85) 0%, transparent 55%),
+    radial-gradient(ellipse at 85% 100%, rgba(196, 164, 108, 0.22) 0%, transparent 55%),
+    radial-gradient(rgba(120, 86, 36, 0.045) 1px, transparent 0);
+  background-size: 100% 100%, 100% 100%, 26px 26px;
+}
+
+.narnia-parchment-deep {
+  background-color: #ece1c6;
+  background-image:
+    radial-gradient(ellipse at 50% 0%, rgba(255, 248, 228, 0.75) 0%, transparent 60%),
+    radial-gradient(ellipse at 50% 100%, rgba(168, 130, 72, 0.18) 0%, transparent 60%),
+    radial-gradient(rgba(120, 86, 36, 0.05) 1px, transparent 0);
+  background-size: 100% 100%, 100% 100%, 24px 24px;
+}
+
+/* Dark Narnia Forest Night Surface */
+.narnia-night {
+  background-color: #071411;
+  background-image:
+    radial-gradient(ellipse at 50% 0%, rgba(212, 175, 55, 0.12) 0%, transparent 55%),
+    radial-gradient(ellipse at 15% 80%, rgba(16, 62, 48, 0.35) 0%, transparent 50%),
+    radial-gradient(ellipse at 85% 20%, rgba(110, 22, 30, 0.14) 0%, transparent 50%);
+}
+
+/* Gold Foil Text Shimmer */
+.text-gold-foil {
+  background: linear-gradient(135deg, #f9e5a0 0%, #d4af37 45%, #fceabb 70%, #b8860b 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Antique Gilded Portrait Frame */
+.narnia-gilded-frame {
+  background: linear-gradient(145deg, #d4af37 0%, #8a641c 25%, #f5dc8c 50%, #7d5714 75%, #c9a227 100%);
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.55),
+    inset 0 1px 2px rgba(255, 245, 200, 0.75),
+    0 0 28px rgba(212, 175, 55, 0.22);
+}
+
+/* Crimson Royal Wax Seal */
+.wax-seal {
+  background: radial-gradient(circle at 35% 30%, #b91c1c 0%, #881319 55%, #56090e 100%);
+  box-shadow:
+    0 8px 20px rgba(86, 9, 14, 0.45),
+    inset 0 2px 4px rgba(255, 190, 190, 0.3),
+    inset 0 -3px 6px rgba(40, 2, 5, 0.65);
 }
 
 /* Elegant lantern glow effect */
 @keyframes lanternGlow {
   0%, 100% {
-    filter: drop-shadow(0 0 12px rgba(245, 158, 11, 0.45));
-    opacity: 0.95;
+    filter: drop-shadow(0 0 14px rgba(245, 158, 11, 0.55));
+    opacity: 0.92;
   }
   50% {
-    filter: drop-shadow(0 0 24px rgba(245, 158, 11, 0.75));
+    filter: drop-shadow(0 0 28px rgba(251, 191, 36, 0.9));
     opacity: 1;
   }
 }
@@ -49,13 +107,35 @@
   animation: lanternGlow 3.5s ease-in-out infinite;
 }
 
+/* Gentle snowfall / magical embers */
+@keyframes snowDrift {
+  0% {
+    transform: translateY(-10px) translateX(0px);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.85;
+  }
+  85% {
+    opacity: 0.85;
+  }
+  100% {
+    transform: translateY(120px) translateX(18px);
+    opacity: 0;
+  }
+}
+
+.snow-particle {
+  animation: snowDrift 7s linear infinite;
+}
+
 /* Floating particles/petals */
 @keyframes floatGentle {
   0% {
     transform: translateY(0px) rotate(0deg);
   }
   50% {
-    transform: translateY(-8px) rotate(3deg);
+    transform: translateY(-8px) rotate(2deg);
   }
   100% {
     transform: translateY(0px) rotate(0deg);

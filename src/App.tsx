@@ -12,6 +12,7 @@ import { AdminPanel } from './components/AdminPanel';
 import { MusicPlayer } from './components/MusicPlayer';
 import { PrivateGate } from './components/PrivateGate';
 import { WardrobeDoor } from './components/WardrobeDoor';
+import { SectionTransitionBand } from './components/NarniaOrnaments';
 import { INITIAL_GUESTS, INITIAL_WEDDING_CONFIG } from './data/initialGuests';
 import type { Guest, WeddingConfig } from './types/wedding';
 import {
@@ -185,7 +186,7 @@ export function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF8F5] text-stone-800 font-sans selection:bg-amber-100 selection:text-amber-900">
+    <div className="min-h-screen bg-[#071411] text-stone-800 font-sans selection:bg-amber-200 selection:text-emerald-950">
       
       {/* 🌲 PORTAL DE NARNIA: Siempre inicia con el Ropero */}
       {!isWardrobeOpen && (
@@ -210,7 +211,7 @@ export function App() {
       {/* Una vez abierto el ropero: Si tiene enlace UUID válido, entra a la invitación completa */}
       {isWardrobeOpen && currentGuest && (
         <>
-          {/* Navegación con botón para volver al ropero y estado de música */}
+          {/* Navegación Real Oscura con Monograma Dorado */}
           <Navbar
             onOpenAdmin={() => setIsAdminOpen(true)}
             isPlayingMusic={isPlayingMusic}
@@ -220,37 +221,49 @@ export function App() {
             onReopenWardrobe={() => setIsWardrobeOpen(false)}
           />
 
-          {/* Hero con saludo VIP, Farol y Cuenta Regresiva */}
+          {/* Hero Oscuro Cinematográfico: Bosque Nocturno, Escudo de Aslan y Cuenta Regresiva */}
           <Hero
             weddingDate={config.weddingDate}
             guest={currentGuest}
           />
 
-          {/* Historia: Conoce nuestra travesía */}
+          <SectionTransitionBand direction="dark-to-parchment" />
+
+          {/* Historia en Pergamino Iluminado con Mapa Antiguo de Narnia */}
           <Story />
 
-          {/* Galería de Recuerdos & Video de la Propuesta */}
+          <SectionTransitionBand direction="parchment-to-dark" />
+
+          {/* Galería de Retratos Dorados de Cair Paravel & Nuevo Video de la Propuesta */}
           <Gallery />
 
-          {/* Cuándo & Dónde: Horarios y Foto de la Entrada Principal */}
+          <SectionTransitionBand direction="dark-to-parchment" />
+
+          {/* Edicto Real en Pergamino: Cuándo & Dónde */}
           <EventDetails config={config} />
 
-          {/* Código de Vestimenta & Foto de Camila en Blanco */}
+          {/* Etiqueta Real en Pergamino: Vestimenta & Nueva Foto de Camila en Blanco */}
           <DressCode
             title={config.dressCodeTitle}
             description={config.dressCodeDescription}
           />
 
-          {/* Lluvia de Sobres & Detalle para el Hogar */}
+          <SectionTransitionBand direction="parchment-to-dark" />
+
+          {/* Cofre Real de Cair Paravel: Lluvia de Sobres & Transferencia */}
           <Gifts bankInfo={config.bankAccountInfo} />
 
-          {/* Módulo de Confirmación de Asistencia (RSVP personalizado) */}
+          <SectionTransitionBand direction="dark-to-parchment" />
+
+          {/* Carta Real con Sello de Lacre: Confirmación de Asistencia (RSVP) */}
           <RsvpSection
             currentGuest={currentGuest}
             onUpdateGuest={handleUpdateGuest}
           />
 
-          {/* Pie de Página */}
+          <SectionTransitionBand direction="parchment-to-dark" />
+
+          {/* Pie de Página: Bosque Estrellado de Narnia */}
           <Footer
             brideName={config.brideName}
             groomName={config.groomName}
