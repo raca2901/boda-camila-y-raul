@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Sparkles, Heart, ArrowRight } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Sparkles, Heart } from 'lucide-react';
 import type { Guest } from '../types/wedding';
 import { NarniaLamppostSvg } from './NarniaOrnaments';
 
@@ -9,47 +9,78 @@ interface WardrobeDoorProps {
   guest?: Guest | null;
 }
 
+type DoorStage = 'closed' | 'opening' | 'entering' | 'fading';
+
 export const WardrobeDoor: React.FC<WardrobeDoorProps> = ({
   onOpenComplete,
   onStartMusic,
   guest,
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [hasStartedTransition, setHasStartedTransition] = useState(false);
+  const [stage, setStage] = useState<DoorStage>('closed');
   const [isHovered, setIsHovered] = useState(false);
+  const timersRef = useRef<number[]>([]);
+
+  useEffect(() => {
+    return () => {
+      timersRef.current.forEach((id) => window.clearTimeout(id));
+    };
+  }, []);
 
   const handleOpen = () => {
-    if (isOpen) return;
-    setIsOpen(true);
+    if (stage !== 'closed') return;
+    setStage('opening');
     onStartMusic();
+
+    // Fase 1 (0s - 2.4s): La puerta se abre, aparece "Bienvenido al Reino de Nuestro Amor" y te acercas al umbral
+    // Fase 2 (2.4s - 4.1s): Te adentras profundamente por el interior del ropero hacia el bosque
+    const enterTimer = window.setTimeout(() => {
+      setStage('entering');
+    }, 2400);
+
+    // Fase 3 (3.7s - 4.5s): Suave desvanecimiento de luz dorada al cruzar el umbral
+    const fadeTimer = window.setTimeout(() => {
+      setStage('fading');
+    }, 3700);
+
+    // Fase 4 (4.5s): Entrada completa a la invitación
+    const completeTimer = window.setTimeout(() => {
+      onOpenComplete();
+    }, 4500);
+
+    timersRef.current.push(enterTimer, fadeTimer, completeTimer);
   };
 
-  const handleAdvance = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (hasStartedTransition) return;
-    setHasStartedTransition(true);
-    setTimeout(() => {
-      onOpenComplete();
-    }, 600);
-  };
+  const isOpen = stage !== 'closed';
+  const isEntering = stage === 'entering' || stage === 'fading';
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex flex-col items-center justify-center overflow-hidden p-4 select-none transition-opacity duration-700 ${
-        hasStartedTransition ? 'opacity-0 pointer-events-none' : 'opacity-100'
+      className={`fixed inset-0 z-50 flex flex-col items-center justify-center overflow-hidden p-4 select-none transition-opacity duration-800 ${
+        stage === 'fading' ? 'opacity-0 pointer-events-none' : 'opacity-100'
       }`}
       style={{
         background: 'radial-gradient(ellipse at center, #1a1109 0%, #0b0a08 55%, #030706 100%)',
       }}
     >
-      {/* Ambient Narnian twilight, golden lantern haze & drifting snow particles */}
+      {/* Ambient Narnian twilight & magical golden dust */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl animate-pulse" />
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-emerald-800/15 rounded-full blur-3xl" />
         <div className="absolute inset-0 opacity-20 bg-[radial-gradient(#fde68a_1px,transparent_1px)] [background-size:32px_32px]" />
       </div>
 
-      {/* Guest Welcome Header Pill (fades smoothly as we step into the open wardrobe) */}
+      {/* Warm golden portal veil as you pass fully inside the wardrobe */}
+      <div
+        className={`fixed inset-0 z-40 pointer-events-none transition-opacity duration-1000 ${
+          isEntering ? 'opacity-100' : 'opacity-0'
+        }`}
+        style={{
+          background:
+            'radial-gradient(circle at 50% 50%, rgba(254, 243, 199, 0.25) 0%, rgba(7, 20, 17, 0.65) 75%, rgba(5, 13, 11, 0.92) 100%)',
+        }}
+      />
+
+      {/* Guest Welcome Header Pill (fades cleanly as the wardrobe opens) */}
       <div
         className={`relative z-30 mb-3 sm:mb-4 text-center transition-all duration-700 ${
           isOpen ? 'opacity-0 -translate-y-4 pointer-events-none' : 'opacity-100 translate-y-0'
@@ -72,12 +103,10 @@ export const WardrobeDoor: React.FC<WardrobeDoorProps> = ({
 
       {/* Main Wardrobe Stage */}
       <div className="relative z-10 flex flex-col items-center justify-center max-w-full">
-        {/* 3D Perspective Container for the Real Narnia Wardrobe — zooms into the open doorway */}
+        {/* 3D Perspective Container — smoothly steps up and glides right INSIDE the open wardrobe */}
         <div
-          className={`relative w-[320px] sm:w-[400px] md:w-[450px] aspect-[650/731] transition-transform duration-[1600ms] ease-[cubic-bezier(0.22,1,0.36,1)] ${
-            isOpen
-              ? 'scale-[2.5] sm:scale-[2.15] md:scale-[1.95] cursor-default'
-              : 'scale-100 cursor-pointer group'
+          className={`relative w-[320px] sm:w-[400px] md:w-[450px] aspect-[650/731] ${
+            !isOpen ? 'cursor-pointer group' : 'cursor-default'
           }`}
           onClick={!isOpen ? handleOpen : undefined}
           onMouseEnter={() => setIsHovered(true)}
@@ -85,9 +114,19 @@ export const WardrobeDoor: React.FC<WardrobeDoorProps> = ({
           style={{
             perspective: '1600px',
             transformOrigin: '51.69% 51.10%',
+            transform:
+              stage === 'closed'
+                ? 'scale(1)'
+                : stage === 'opening'
+                ? 'scale(1.65)'
+                : 'scale(5.4)',
+            transition:
+              stage === 'opening'
+                ? 'transform 2.2s cubic-bezier(0.22, 1, 0.36, 1)'
+                : 'transform 1.85s cubic-bezier(0.45, 0, 0.2, 1)',
           }}
         >
-          {/* 1. PORTAL INTERIOR (Strictly inside the real carved wooden doorway opening) */}
+          {/* 1. PORTAL INTERIOR (Glowing Snowy Narnia Forest + ONLY "Bienvenido al Reino de Nuestro Amor") */}
           <div
             className="absolute overflow-hidden z-10 flex flex-col items-center justify-center"
             style={{
@@ -97,153 +136,96 @@ export const WardrobeDoor: React.FC<WardrobeDoorProps> = ({
               height: '60.88%',
               containerType: 'size',
               background:
-                'radial-gradient(ellipse at 50% 28%, #1e424e 0%, #0d2229 48%, #040d10 100%)',
+                'radial-gradient(ellipse at 50% 35%, #1e424e 0%, #0b1e25 55%, #040d10 100%)',
               boxShadow: isOpen
-                ? '0 0 45px rgba(251, 191, 36, 0.5), inset 0 0 28px rgba(253, 230, 138, 0.35)'
+                ? '0 0 55px rgba(251, 191, 36, 0.6), inset 0 0 32px rgba(253, 230, 138, 0.4)'
                 : 'none',
             }}
           >
-            {/* Snowy Narnia Forest Backdrop inside the wardrobe */}
+            {/* Snowy Narnia Forest Backdrop — subtly zooms forward for depth as you enter */}
             <div
-              className="absolute inset-0 bg-cover bg-center opacity-55 transition-opacity duration-1000"
+              className="absolute inset-0 bg-cover bg-center transition-transform duration-[3800ms] ease-out"
               style={{
                 backgroundImage: "url('/media/narnia-forest-lantern.jpg')",
+                transform: isEntering ? 'scale(1.25)' : isOpen ? 'scale(1.08)' : 'scale(1)',
+                opacity: isOpen ? 0.82 : 0.4,
               }}
             />
 
-            {/* Twilight vignette + warm lantern light burst */}
+            {/* Soft golden lantern atmosphere */}
             <div
               className={`absolute inset-0 transition-opacity duration-1000 pointer-events-none ${
                 isOpen ? 'opacity-100' : 'opacity-0'
               }`}
               style={{
                 background:
-                  'radial-gradient(circle at 50% 18%, rgba(251,191,36,0.35) 0%, rgba(7,20,17,0.58) 45%, rgba(4,12,10,0.88) 100%)',
+                  'radial-gradient(circle at 50% 42%, rgba(251,191,36,0.28) 0%, rgba(7,20,17,0.45) 52%, rgba(4,12,10,0.82) 100%)',
               }}
             />
 
-            {/* Delicate falling snow flecks inside the doorway */}
+            {/* Delicate falling magical snow specks */}
             <div
-              className="absolute inset-0 opacity-35 pointer-events-none bg-[radial-gradient(#fffbeb_1px,transparent_1px)] [background-size:14px_14px]"
+              className="absolute inset-0 opacity-40 pointer-events-none bg-[radial-gradient(#fffbeb_1px,transparent_1px)] [background-size:14px_14px]"
               aria-hidden="true"
             />
 
-            {/* WELCOME CONTENT & ENTER BUTTON — STRICTLY INSIDE THE WARDROBE */}
+            {/* ONLY THE SINGLE PHRASE INSIDE THE WARDROBE */}
             <div
-              className={`relative z-20 w-full h-full flex flex-col items-center justify-between text-center transition-all duration-1000 delay-500 ${
-                isOpen
-                  ? 'opacity-100 translate-y-0 scale-100'
-                  : 'opacity-0 translate-y-2 scale-95 pointer-events-none'
+              className={`relative z-20 flex flex-col items-center justify-center text-center transition-all duration-1000 ${
+                stage === 'opening'
+                  ? 'opacity-100 translate-y-0 scale-100 delay-300'
+                  : isEntering
+                  ? 'opacity-95 scale-110'
+                  : 'opacity-0 translate-y-2 scale-90 pointer-events-none'
               }`}
               style={{
-                padding: '7cqw 6.5cqw 7.5cqw',
+                padding: '0 8cqw',
+                gap: '4.5cqw',
               }}
             >
-              {/* Top: Glowing Victorian Narnia Lamppost + Badge */}
-              <div className="flex flex-col items-center" style={{ gap: '3cqw' }}>
-                <div className="relative flex items-center justify-center">
-                  <div
-                    className="absolute rounded-full bg-amber-300/60 blur-md animate-pulse"
-                    style={{ width: '20cqw', height: '20cqw' }}
-                  />
-                  <div
-                    className="relative rounded-full bg-[#091c18]/90 border border-amber-300/70 flex items-center justify-center shadow-[0_0_16px_rgba(251,191,36,0.65)]"
-                    style={{ width: '17cqw', height: '17cqw' }}
-                  >
-                    <NarniaLamppostSvg className="w-[70%] h-[70%] text-amber-300" />
-                  </div>
-                </div>
-
+              {/* Subtle glowing Victorian Narnia Lamppost */}
+              <div className="relative flex items-center justify-center">
                 <div
-                  className="inline-flex items-center justify-center rounded-full bg-amber-400/15 border border-amber-300/45 text-amber-200 font-cinzel uppercase font-semibold tracking-wider backdrop-blur-xs"
-                  style={{
-                    fontSize: '3.6cqw',
-                    padding: '1.6cqw 3.8cqw',
-                    gap: '1.5cqw',
-                  }}
-                >
-                  <Sparkles style={{ width: '3.8cqw', height: '3.8cqw' }} className="text-amber-300 shrink-0" />
-                  <span>Has Cruzado el Ropero</span>
-                </div>
+                  className="absolute rounded-full bg-amber-300/65 blur-md animate-pulse"
+                  style={{ width: '24cqw', height: '24cqw' }}
+                />
+                <NarniaLamppostSvg className="relative text-amber-200 drop-shadow-[0_0_10px_rgba(251,191,36,0.9)] w-[20cqw] h-[20cqw]" />
               </div>
 
-              {/* Middle: Parchment-illuminated Welcome Message */}
+              {/* Thin golden ornamental rule */}
               <div
-                className="w-full flex flex-col items-center rounded-lg border border-amber-300/30 bg-[#f6efe0]/95 shadow-[0_6px_20px_rgba(0,0,0,0.55)]"
+                className="bg-gradient-to-r from-transparent via-amber-300/80 to-transparent"
+                style={{ width: '55%', height: '0.6cqw' }}
+              />
+
+              {/* The Phrase: Bienvenido al Reino de Nuestro Amor */}
+              <h2
+                className="font-serif-title font-medium text-amber-50 leading-[1.18] tracking-wide"
                 style={{
-                  padding: '5.5cqw 4.8cqw',
-                  gap: '3.2cqw',
+                  fontSize: '12.5cqw',
+                  textShadow:
+                    '0 2px 14px rgba(0, 0, 0, 0.95), 0 0 22px rgba(245, 158, 11, 0.7)',
                 }}
               >
-                <h2
-                  className="font-serif-title text-emerald-950 font-semibold leading-[1.12]"
-                  style={{ fontSize: '9.8cqw' }}
-                >
-                  Bienvenido al Reino de Nuestro Amor
-                </h2>
+                Bienvenido al Reino de Nuestro Amor
+              </h2>
 
-                <div
-                  className="bg-gradient-to-r from-transparent via-amber-700/45 to-transparent"
-                  style={{ width: '48%', height: '0.5cqw' }}
-                />
-
-                <p
-                  className="font-serif-title italic text-stone-700 leading-[1.35]"
-                  style={{ fontSize: '5.5cqw' }}
-                >
-                  «Acompáñanos en la gran aventura de abrir las puertas hacia un nuevo capítulo de nuestra historia.»
-                </p>
-
-                <div
-                  className="w-full border-y border-amber-900/15 font-cinzel uppercase text-emerald-900 font-semibold tracking-wider leading-[1.35]"
-                  style={{
-                    fontSize: '3.7cqw',
-                    padding: '2.2cqw 1cqw',
-                  }}
-                >
-                  Raúl Ernesto & María Camila
-                  <span className="block text-amber-800" style={{ fontSize: '3.5cqw', marginTop: '0.6cqw' }}>
-                    31 de Enero de 2027
-                  </span>
-                </div>
-
-                {/* Button to Enter the Wedding — right inside the wardrobe */}
-                <button
-                  type="button"
-                  onClick={handleAdvance}
-                  className="w-full bg-emerald-950 hover:bg-emerald-900 active:scale-[0.98] text-amber-100 border border-amber-400/55 font-cinzel uppercase tracking-widest rounded-lg shadow-lg transition-all duration-300 flex items-center justify-center group cursor-pointer"
-                  style={{
-                    fontSize: '4.1cqw',
-                    padding: '3.8cqw 3cqw',
-                    gap: '2cqw',
-                  }}
-                >
-                  <span>Entrar a Nuestra Boda</span>
-                  <ArrowRight
-                    style={{ width: '4.5cqw', height: '4.5cqw' }}
-                    className="text-amber-300 transition-transform group-hover:translate-x-0.5 shrink-0"
-                  />
-                </button>
-              </div>
-
-              {/* Subtle bottom guest tag inside portal */}
+              {/* Thin golden ornamental rule */}
               <div
-                className="font-cinzel uppercase tracking-widest text-amber-200/80 truncate max-w-full"
-                style={{ fontSize: '3.4cqw' }}
-              >
-                {guest ? `Para: ${guest.name}` : 'Narnia · 31 · 01 · 2027'}
-              </div>
+                className="bg-gradient-to-r from-transparent via-amber-300/80 to-transparent"
+                style={{ width: '55%', height: '0.6cqw' }}
+              />
             </div>
           </div>
 
-          {/* 2. THE REAL NARNIA WARDROBE FRAME (Carved columns & crown mask portal edges cleanly) */}
+          {/* 2. THE REAL NARNIA WARDROBE FRAME */}
           <img
             src="/media/narnia-frame.png"
             alt="Ropero Original de Narnia"
             className="absolute inset-0 w-full h-full object-contain pointer-events-none z-20 drop-shadow-[0_24px_50px_rgba(0,0,0,0.95)]"
           />
 
-          {/* 3. THE CENTER DOOR (Swings open in 3D to reveal the message inside) */}
+          {/* 3. THE CENTER DOOR (Swings open in 3D) */}
           <div
             className={`absolute z-30 ${isOpen ? 'pointer-events-none' : ''}`}
             style={{
@@ -253,8 +235,8 @@ export const WardrobeDoor: React.FC<WardrobeDoorProps> = ({
               height: '60.88%',
               transformOrigin: 'right center',
               transformStyle: 'preserve-3d',
-              transform: isOpen ? 'rotateY(115deg)' : 'rotateY(0deg)',
-              transition: 'transform 1.6s cubic-bezier(0.25, 1, 0.5, 1)',
+              transform: isOpen ? 'rotateY(118deg)' : 'rotateY(0deg)',
+              transition: 'transform 1.5s cubic-bezier(0.25, 1, 0.5, 1)',
             }}
           >
             <img
@@ -271,7 +253,7 @@ export const WardrobeDoor: React.FC<WardrobeDoorProps> = ({
         </div>
       </div>
 
-      {/* 4. PRE-OPENING CTA (Disappears cleanly once opened so all focus is INSIDE the wardrobe) */}
+      {/* 4. PRE-OPENING CTA */}
       <div
         className={`relative z-30 mt-5 sm:mt-6 text-center transition-all duration-700 ${
           isOpen ? 'opacity-0 translate-y-6 pointer-events-none' : 'opacity-100 translate-y-0'
@@ -289,7 +271,7 @@ export const WardrobeDoor: React.FC<WardrobeDoorProps> = ({
           <span>Toca el Ropero para Abrirlo</span>
         </button>
         <p className="text-[11px] text-amber-200/70 font-light mt-2.5 tracking-wider">
-          Abre las puertas mágicas para iniciar la melodía y cruzar hacia nuestra historia
+          Abre las puertas mágicas para iniciar la melodía y adentrarte en nuestra historia
         </p>
       </div>
     </div>

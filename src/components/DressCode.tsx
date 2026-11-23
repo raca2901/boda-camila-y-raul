@@ -75,10 +75,10 @@ export const DressCode: React.FC<DressCodeProps> = () => {
                   </div>
                   <div>
                     <span className="text-xs font-cinzel uppercase font-semibold text-emerald-950 block mb-0.5 tracking-wider">
-                      1. Coherencia con el contexto
+                      1. En armonía con este momento especial
                     </span>
                     <p className="text-xs sm:text-sm text-stone-700 font-light leading-relaxed">
-                      Sé coherente con el contexto, es un momento profundamente significativo y valioso.
+                      Te invitamos a elegir un atuendo acorde a la ocasión; para nosotros es un día profundamente significativo y nos hará muy felices celebrarlo juntos con todo el cariño que merece.
                     </p>
                   </div>
                 </div>
