@@ -107,9 +107,10 @@ export function App() {
 
   // Subscribe to Supabase Realtime so PC and mobile stay synchronized live
   useEffect(() => {
-    if (!supabase) return;
+    const client = supabase;
+    if (!client) return;
 
-    const channel = supabase
+    const channel = client
       .channel('guests-realtime-sync')
       .on(
         'postgres_changes',
@@ -121,7 +122,7 @@ export function App() {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      client.removeChannel(channel);
     };
   }, [refreshGuests]);
 
